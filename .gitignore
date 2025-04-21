@@ -25,3 +25,5 @@ replay_pid*
 out/
 game.iml
 .DS_Store
+menu.wav
+resources
