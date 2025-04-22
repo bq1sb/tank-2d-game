@@ -8,6 +8,7 @@ public class PlayerTank {
     private int x, y;
     private String direction;
     private List<Bullet> bullets;
+    private int health = 5;
 
     private static final int WIDTH = 40;
     private static final int HEIGHT = 40;
@@ -30,54 +31,46 @@ public class PlayerTank {
         }
     }
 
-    public void moveUp() {
-        y -= 2;
-        direction = "UP";
-    }
-
-    public void moveDown() {
-        y += 2;
-        direction = "DOWN";
-    }
-
-    public void moveLeft() {
-        x -= 2;
-        direction = "LEFT";
-    }
-
-    public void moveRight() {
-        x += 2;
-        direction = "RIGHT";
-    }
+    public void moveUp() { y -= 3; direction = "UP"; }
+    public void moveDown() { y += 3; direction = "DOWN"; }
+    public void moveLeft() { x -= 3; direction = "LEFT"; }
+    public void moveRight() { x += 3; direction = "RIGHT"; }
 
     public void shoot() {
-        Bullet bullet = new Bullet(x + WIDTH / 2, y + HEIGHT / 2, direction);
-        bullets.add(bullet);
+        bullets.add(new Bullet(x + WIDTH / 2, y + HEIGHT / 2, direction));
     }
 
     public void update() {
-        List<Bullet> bulletsToRemove = new ArrayList<>();
+        // Обновляем каждую пулю
         for (Bullet bullet : bullets) {
-            bullet.update();
-            if (bullet.isOutOfBounds(GamePanel.WIDTH, GamePanel.HEIGHT)) {
-                bulletsToRemove.add(bullet);
-            }
+            bullet.update(800, 600); // Используем размеры экрана
         }
-        bullets.removeAll(bulletsToRemove);
+
+        // Удаляем неактивные пули
+        bullets.removeIf(bullet -> !bullet.isActive());
     }
 
-    public void draw(Graphics g) {
-        Image sprite = getCurrentSprite();
-        if (sprite != null) {
-            g.drawImage(sprite, x, y, WIDTH, HEIGHT, null);
-        } else {
-            g.setColor(Color.GREEN); // fallback если спрайт не загружен
-            g.fillRect(x, y, WIDTH, HEIGHT);
-        }
 
-        for (Bullet bullet : bullets) {
-            bullet.draw(g);
+    public void draw(Graphics g) {
+        if (isAlive()) {
+            Image sprite = getCurrentSprite();
+            if (sprite != null) g.drawImage(sprite, x, y, WIDTH, HEIGHT, null);
+            else {
+                g.setColor(Color.GREEN);
+                g.fillRect(x, y, WIDTH, HEIGHT);
+            }
+
+            for (Bullet bullet : bullets) bullet.draw(g);
+
+            drawHealthBar(g);
         }
+    }
+
+    private void drawHealthBar(Graphics g) {
+        g.setColor(Color.RED);
+        g.fillRect(x, y - 10, WIDTH, 5);
+        g.setColor(Color.GREEN);
+        g.fillRect(x, y - 10, (int)((health / 5.0) * WIDTH), 5);
     }
 
     private Image getCurrentSprite() {
@@ -90,10 +83,22 @@ public class PlayerTank {
         };
     }
 
-    public List<Bullet> getBullets() {
-        return bullets;
+    public int getX() {
+        return x;
     }
+
+    // Получаем координаты Y
+    public int getY() {
+        return y;
+    }
+
+    public List<Bullet> getBullets() { return bullets; }
+    public Rectangle getBounds() { return new Rectangle(x, y, WIDTH, HEIGHT); }
+
+    public void takeDamage() { health--; }
+    public boolean isAlive() { return health > 0; }
 }
+
 
 
 

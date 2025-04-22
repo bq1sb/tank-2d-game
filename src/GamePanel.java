@@ -19,9 +19,6 @@ public class GamePanel extends JPanel {
         // создание игрока
         playerTank = new PlayerTank(100, 100);
 
-        // создание врага
-        enemyTank = new EnemyTank(500, 300, playerTank);
-
         // обработка ввода клавиш
         addKeyListener(new KeyAdapter() {
             @Override

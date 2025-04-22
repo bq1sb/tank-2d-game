@@ -396,8 +396,9 @@ public class Game extends JFrame {
             gameMap = new Map();
             playerTank = new PlayerTank(100, 100);
 
+            // Добавляем врагов
             for (int i = 0; i < 3; i++) {
-                enemies.add(new EnemyTank(200 + i * 100, 200, playerTank));
+                enemies.add(new EnemyTank(playerTank));
             }
 
             int buttonWidth = 80;
@@ -444,7 +445,6 @@ public class Game extends JFrame {
                 }
             });
 
-            // обновляет игру каждые 50 мс
             Timer gameTimer = new Timer(50, e -> updateGame());
             gameTimer.start();
 
@@ -476,25 +476,47 @@ public class Game extends JFrame {
                 enemy.draw(g);
             }
 
-            // пули игрока
             playerTank.getBullets().forEach(bullet -> bullet.draw(g));
-            // пули врагов
             for (EnemyTank enemy : enemies) {
                 enemy.getBullets().forEach(bullet -> bullet.draw(g));
             }
         }
 
-        // метод, который вызывается каждый тик таймера
         public void updateGame() {
             playerTank.update();
             for (EnemyTank enemy : enemies) {
                 enemy.update();
             }
+
+            for (EnemyTank enemy : enemies) {
+                for (Bullet bullet : new ArrayList<>(playerTank.getBullets())) {
+                    if (enemy.isAlive() && bullet.getBounds().intersects(enemy.getBounds())) {
+                        enemy.takeDamage();
+                        playerTank.getBullets().remove(bullet);
+                    }
+                }
+            }
+
+            for (EnemyTank enemy : enemies) {
+                for (Bullet bullet : new ArrayList<>(enemy.getBullets())) {
+                    if (playerTank.isAlive() && bullet.getBounds().intersects(playerTank.getBounds())) {
+                        playerTank.takeDamage();
+                        enemy.getBullets().remove(bullet);
+                    }
+                }
+            }
+
+            for (int i = 0; i < enemies.size(); i++) {
+                if (!enemies.get(i).isAlive()) {
+                    enemies.remove(i);
+                    enemies.add(new EnemyTank(playerTank));
+                }
+            }
+
             repaint();
         }
     }
 }
-
 
 
 

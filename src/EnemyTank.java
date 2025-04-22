@@ -8,59 +8,96 @@ public class EnemyTank {
     private int x, y;
     private int speed = 2;
     private int direction;
+    private int health = 5;
     private PlayerTank playerTank;
-
+    private List<Bullet> bullets = new ArrayList<>();
     private static final int WIDTH = 40;
     private static final int HEIGHT = 40;
-
     private Image upSprite, downSprite, leftSprite, rightSprite;
 
-    private List<Bullet> bullets = new ArrayList<>(); // Добавили список пуль
+    // Максимальное расстояние для начала стрельбы
+    private static final double SHOOTING_DISTANCE = 200.0;
+    private static final int FIRE_COOLDOWN = 1000; // Время между выстрелами (в миллисекундах)
+    private long lastShootTime = 0;
 
-    public EnemyTank(int x, int y, PlayerTank playerTank) {
-        this.x = x;
-        this.y = y;
+    public EnemyTank(PlayerTank playerTank) {
         this.playerTank = playerTank;
-        this.direction = (int) (Math.random() * 4);  // Направление на старте случайное
+        this.direction = (int) (Math.random() * 4);
+        loadSprites();
+        reset(); // Вызов для начальной позиции врага
+    }
 
+    private void loadSprites() {
         try {
             upSprite = ImageIO.read(getClass().getResource("/enemyTank_up.png"));
             downSprite = ImageIO.read(getClass().getResource("/enemyTank_down.png"));
             leftSprite = ImageIO.read(getClass().getResource("/enemyTank_left.png"));
             rightSprite = ImageIO.read(getClass().getResource("/enemyTank_right.png"));
-        } catch (IOException | IllegalArgumentException e) {
-            System.err.println("Не удалось загрузить спрайт: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("Не удалось загрузить спрайт врага: " + e.getMessage());
         }
+    }
+
+    public void reset() {
+        int playerX = playerTank.getX();
+        int playerY = playerTank.getY();
+
+        if (playerY < 300) {
+            this.x = (int) (Math.random() * 800);
+            this.y = 600 - HEIGHT;
+        } else {
+            this.x = (int) (Math.random() * 800);
+            this.y = 0;
+        }
+
+        this.health = 5;
+        this.direction = (int) (Math.random() * 4);
     }
 
     public void update() {
-        move();
-        shoot();
-        for (Bullet bullet : bullets) {
-            bullet.update(); // Обновляем пули
+        double distanceToPlayer = getDistanceToPlayer();
+        if (distanceToPlayer < SHOOTING_DISTANCE) {
+            if (canShoot()) {
+                shoot();
+            }
+        } else {
+            move();
         }
-        // Удаляем пули, вышедшие за границы экрана
-        bullets.removeIf(b -> b.isOutOfBounds(GamePanel.WIDTH, GamePanel.HEIGHT));
+
+        for (Bullet bullet : bullets) {
+            bullet.update(800, 600);
+        }
+        bullets.removeIf(bullet -> !bullet.isActive());
+    }
+
+    private double getDistanceToPlayer() {
+        int dx = playerTank.getX() - this.x;
+        int dy = playerTank.getY() - this.y;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     private void move() {
-        switch (direction) {
-            case 0 -> y -= speed;
-            case 1 -> y += speed;
-            case 2 -> x -= speed;
-            case 3 -> x += speed;
-        }
+        if (playerTank != null && playerTank.isAlive()) {
+            if (playerTank.getX() > x) { x += speed; direction = 3; }
+            else if (playerTank.getX() < x) { x -= speed; direction = 2; }
 
-        if (y < 0 || y > GamePanel.HEIGHT - HEIGHT) direction = (int) (Math.random() * 4);
-        if (x < 0 || x > GamePanel.WIDTH - WIDTH) direction = (int) (Math.random() * 4);
+            if (playerTank.getY() > y) { y += speed; direction = 1; }
+            else if (playerTank.getY() < y) { y -= speed; direction = 0; }
+        }
+    }
+
+    private boolean canShoot() {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastShootTime >= FIRE_COOLDOWN) {
+            lastShootTime = currentTime;
+            return true;
+        }
+        return false;
     }
 
     private void shoot() {
         if (Math.random() < 0.01) {
-            Bullet bullet = createBullet();
-            if (bullet != null) {
-                bullets.add(bullet); // Добавляем пулю в список
-            }
+            bullets.add(createBullet());
         }
     }
 
@@ -75,18 +112,25 @@ public class EnemyTank {
     }
 
     public void draw(Graphics g) {
+        if (!isAlive()) return;
+
         Image sprite = getCurrentSprite();
-        if (sprite != null) {
-            g.drawImage(sprite, x, y, WIDTH, HEIGHT, null);
-        } else {
+        if (sprite != null) g.drawImage(sprite, x, y, WIDTH, HEIGHT, null);
+        else {
             g.setColor(Color.RED);
             g.fillRect(x, y, WIDTH, HEIGHT);
         }
 
-        // Отрисовка пуль
-        for (Bullet bullet : bullets) {
-            bullet.draw(g);
-        }
+        for (Bullet bullet : bullets) bullet.draw(g);
+
+        drawHealthBar(g);
+    }
+
+    private void drawHealthBar(Graphics g) {
+        g.setColor(Color.RED);
+        g.fillRect(x, y - 10, WIDTH, 5);
+        g.setColor(Color.GREEN);
+        g.fillRect(x, y - 10, (int)((health / 5.0) * WIDTH), 5);
     }
 
     private Image getCurrentSprite() {
@@ -99,10 +143,24 @@ public class EnemyTank {
         };
     }
 
-    public List<Bullet> getBullets() {
-        return bullets;
-    }
+    public List<Bullet> getBullets() { return bullets; }
+    public Rectangle getBounds() { return new Rectangle(x, y, WIDTH, HEIGHT); }
+
+    public void takeDamage() { health--; }
+    public boolean isAlive() { return health > 0; }
+
+    public int getX() { return x; }
+    public int getY() { return y; }
 }
+
+
+
+
+
+
+
+
+
 
 
 
