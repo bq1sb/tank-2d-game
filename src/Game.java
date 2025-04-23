@@ -376,11 +376,16 @@ public class Game extends JFrame {
 
 
     public class GameScreen extends JPanel {
-        private List<EnemyTank> enemies = new ArrayList<>();
+        private GameMap gameMap;
         private PlayerTank playerTank;
-        private Map gameMap;
         private JButton upButton, downButton, leftButton, rightButton;
         private Robot robot;
+        private boolean gameOver = false; // Флаг Game Over
+        private Point[] enemySpawnPoints = {
+                new Point(2 * GameMap.TILE_SIZE, 1 * GameMap.TILE_SIZE),
+                new Point(4 * GameMap.TILE_SIZE, 3 * GameMap.TILE_SIZE)
+        };
+        private int currentSpawnPointIndex = 0;
 
         public GameScreen() {
             setFocusable(true);
@@ -393,18 +398,34 @@ public class Game extends JFrame {
                 System.err.println("Не удалось создать Robot: " + e.getMessage());
             }
 
-            gameMap = new Map();
-            playerTank = new PlayerTank(100, 100);
-
-            // Добавляем врагов
-            for (int i = 0; i < 3; i++) {
-                enemies.add(new EnemyTank(playerTank));
-            }
+            String[] level1 = {
+                    "WWWWWWWWWWWWWWWWWWWWWWWWW",
+                    "W.......................W",
+                    "W..P....................W", // Линия разрушаемых стен
+                    "W.......................W",
+                    "W.......................W",
+                    "W.......................W",
+                    "W.......WW..............W",
+                    "W........WW.............W",
+                    "W.........WW............W",
+                    "W.......................W",
+                    "W.......................W",
+                    "W.......................W",
+                    "W.......................W",
+                    "W.......................W",
+                    "W.......................W",
+                    "W...................E...W",
+                    "W..................E....W",
+                    "WWWWWWWWWWWWWWWWWWWWWWWWW"
+            };
+            playerTank = new PlayerTank(GameMap.TILE_SIZE * 2, GameMap.TILE_SIZE, null); // Начальное положение игрока
+            gameMap = new GameMap(level1, playerTank); // Создаем GameMap, передавая данные
+            playerTank.setWalls(gameMap.walls); // Теперь устанавливаем список стен
 
             int buttonWidth = 80;
             int buttonHeight = 60;
-            int screenWidth = 800;
-            int screenHeight = 600;
+            int screenWidth = 800; // Увеличенный размер экрана
+            int screenHeight = 600; // Увеличенный размер экрана
             int controlPanelHeight = 100;
 
             upButton = new JButton();
@@ -435,12 +456,14 @@ public class Game extends JFrame {
             addKeyListener(new KeyAdapter() {
                 @Override
                 public void keyPressed(KeyEvent e) {
-                    switch (e.getKeyCode()) {
-                        case KeyEvent.VK_W -> playerTank.moveUp();
-                        case KeyEvent.VK_S -> playerTank.moveDown();
-                        case KeyEvent.VK_A -> playerTank.moveLeft();
-                        case KeyEvent.VK_D -> playerTank.moveRight();
-                        case KeyEvent.VK_SPACE -> playerTank.shoot();
+                    if (!gameOver && playerTank.isAlive()) { // Добавлена проверка gameOver и жизни игрока
+                        switch (e.getKeyCode()) {
+                            case KeyEvent.VK_W -> playerTank.moveUp();
+                            case KeyEvent.VK_S -> playerTank.moveDown();
+                            case KeyEvent.VK_A -> playerTank.moveLeft();
+                            case KeyEvent.VK_D -> playerTank.moveRight();
+                            case KeyEvent.VK_SPACE -> playerTank.shoot();
+                        }
                     }
                 }
             });
@@ -452,7 +475,7 @@ public class Game extends JFrame {
         }
 
         private void pressKey(int keyCode) {
-            if (robot != null) {
+            if (robot != null && !gameOver && playerTank.isAlive()) { // Добавлена проверка gameOver и жизни игрока
                 robot.keyPress(keyCode);
                 robot.keyRelease(keyCode);
             }
@@ -470,50 +493,106 @@ public class Game extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            gameMap.draw(g);
-            playerTank.draw(g);
-            for (EnemyTank enemy : enemies) {
-                enemy.draw(g);
-            }
+            if (gameOver) {
+                // Отображение Game Over
+                g.setColor(Color.BLACK);
+                g.fillRect(0, 0, getWidth(), getHeight());
+                g.setColor(Color.RED);
+                g.setFont(new Font("Arial", Font.BOLD, 50));
+                g.drawString("Game Over", getWidth() / 2 - 150, getHeight() / 2);
+            } else {
+                gameMap.draw(g);
+                playerTank.draw(g);
 
-            playerTank.getBullets().forEach(bullet -> bullet.draw(g));
-            for (EnemyTank enemy : enemies) {
-                enemy.getBullets().forEach(bullet -> bullet.draw(g));
+                playerTank.getBullets().forEach(bullet -> bullet.draw(g));
+                for (EnemyTank enemy : gameMap.enemies) {
+                    if (enemy.isAlive()) {
+                        enemy.draw(g);
+                        enemy.getBullets().forEach(bullet -> bullet.draw(g));
+                    }
+                }
             }
         }
 
         public void updateGame() {
-            playerTank.update();
-            for (EnemyTank enemy : enemies) {
-                enemy.update();
-            }
+            if (!gameOver) {
+                // Обновляем игрока
+                playerTank.update();
 
-            for (EnemyTank enemy : enemies) {
+                // Обновляем врагов, только если игрок жив
+                if (playerTank.isAlive()) {
+                    for (EnemyTank enemy : gameMap.enemies) {
+                        enemy.update(getWidth(), getHeight());  // передаем размер экрана
+                    }
+                }
+
+                // Проверка столкновений пуль игрока со стенами
                 for (Bullet bullet : new ArrayList<>(playerTank.getBullets())) {
-                    if (enemy.isAlive() && bullet.getBounds().intersects(enemy.getBounds())) {
-                        enemy.takeDamage();
+                    if (checkBulletWallCollision(bullet)) {
                         playerTank.getBullets().remove(bullet);
                     }
                 }
-            }
 
-            for (EnemyTank enemy : enemies) {
-                for (Bullet bullet : new ArrayList<>(enemy.getBullets())) {
-                    if (playerTank.isAlive() && bullet.getBounds().intersects(playerTank.getBounds())) {
-                        playerTank.takeDamage();
-                        enemy.getBullets().remove(bullet);
+                // Проверка столкновений пуль врагов со стенами
+                for (EnemyTank enemy : gameMap.enemies) {
+                    for (Bullet bullet : new ArrayList<>(enemy.getBullets())) {
+                        if (checkBulletWallCollision(bullet)) {
+                            enemy.getBullets().remove(bullet);
+                        }
                     }
                 }
-            }
 
-            for (int i = 0; i < enemies.size(); i++) {
-                if (!enemies.get(i).isAlive()) {
-                    enemies.remove(i);
-                    enemies.add(new EnemyTank(playerTank));
+                // Проверка столкновений пуль игрока с врагами
+                for (EnemyTank enemy : gameMap.enemies) {
+                    for (Bullet bullet : new ArrayList<>(playerTank.getBullets())) {
+                        if (enemy.isAlive() && bullet.getBounds().intersects(enemy.getBounds())) {
+                            enemy.takeDamage();
+                            playerTank.getBullets().remove(bullet);
+                        }
+                    }
+                }
+
+                // Проверка столкновений пуль врагов с игроком
+                for (EnemyTank enemy : gameMap.enemies) {
+                    for (Bullet bullet : new ArrayList<>(enemy.getBullets())) {
+                        if (playerTank.isAlive() && bullet.getBounds().intersects(playerTank.getBounds())) {
+                            playerTank.takeDamage(1);  // Уменьшаем здоровье на 1
+                            enemy.getBullets().remove(bullet);
+                        }
+                    }
+                }
+
+                // Респавн врагов (происходит независимо от состояния игрока)
+                for (int i = 0; i < gameMap.enemies.size(); i++) {
+                    EnemyTank enemy = gameMap.enemies.get(i);
+                    if (!enemy.isAlive()) {
+                        EnemyTank newEnemy = new EnemyTank(playerTank, gameMap.walls);
+                        // Используем начальные позиции врагов из GameMap
+                        if (gameMap.originalEnemyPositions != null && i < gameMap.originalEnemyPositions.size()) {
+                            Point spawn = gameMap.originalEnemyPositions.get(i);
+                            newEnemy.setPosition(spawn.x, spawn.y);
+                            gameMap.enemies.set(i, newEnemy);
+                        }
+                    }
+                }
+
+                // Проверка Game Over
+                if (!playerTank.isAlive() && !gameOver) {
+                    gameOver = true;
+                }
+
+                repaint();
+            }
+        }
+
+        private boolean checkBulletWallCollision(Bullet bullet) {
+            Rectangle bulletRect = bullet.getBounds();
+            for (Wall wall : gameMap.walls) {
+                if (bulletRect.intersects(wall.getBounds())) {
+                    return true;
                 }
             }
-
-            repaint();
+            return false;
         }
     }
 }

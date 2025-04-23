@@ -1,32 +1,45 @@
 import javax.swing.*;
+import java.util.List;
 
 public class GameFrame extends JFrame {
 
+    private GamePanel gamePanel;
+    private PlayerTank playerTank;
+    private List<Wall> walls;
+    private List<EnemyTank> enemies; // Список врагов
+    private GameMap gameMap;
+
     public GameFrame() {
-        // настройки окна
         setTitle("Tank Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
 
-        //панель игры
-        GamePanel gamePanel = new GamePanel();
+        // Создаем игрока
+        playerTank = new PlayerTank(100, 100, null); // Начальные координаты и список стен
+
+        // Загружаем карту, создаем стены и врагов
+        gameMap = new GameMap(GameMap.loadLevelData(), playerTank);
+        walls = gameMap.walls;
+        enemies = gameMap.enemies; // Получаем список врагов из GameMap
+        playerTank.setWalls(walls); // Устанавливаем стены игроку
+
+        // Создаем GamePanel, передавая игрока, стены и список врагов
+        gamePanel = new GamePanel(playerTank, walls, enemies);
         add(gamePanel);
 
-        //размер окна
         pack();
-        setLocationRelativeTo(null); // Центрируем окно
+        setLocationRelativeTo(null);
         setVisible(true);
 
-        // запуск игрового цикла
         startGameLoop(gamePanel);
     }
 
     private void startGameLoop(GamePanel gamePanel) {
         new Thread(() -> {
             while (true) {
-                gamePanel.update();  // обновление логики игры
+                gamePanel.update();
                 try {
-                    Thread.sleep(16);  // 60к/с
+                    Thread.sleep(16); // ~60 FPS
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -35,8 +48,8 @@ public class GameFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        // создаем и запускаем игровое окно
         SwingUtilities.invokeLater(GameFrame::new);
     }
 }
+
 

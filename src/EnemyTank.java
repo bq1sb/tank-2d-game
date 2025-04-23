@@ -9,22 +9,28 @@ public class EnemyTank {
     private int speed = 2;
     private int direction;
     private int health = 5;
+
     private PlayerTank playerTank;
     private List<Bullet> bullets = new ArrayList<>();
-    private static final int WIDTH = 40;
-    private static final int HEIGHT = 40;
+    private List<Wall> walls;
+
+    private static final int WIDTH = 32;
+    private static final int HEIGHT = 32;
+    private static final double DETECTION_RADIUS = 300.0;
+    private static final int SHOOTING_COOLDOWN = 500;
+    private static final double MIN_DISTANCE_FROM_PLAYER = 100.0;
+    // Используйте размеры игрового поля, переданные в update()
+    private int screenWidth;
+    private int screenHeight;
+
+    private long lastShootTime = 0;
     private Image upSprite, downSprite, leftSprite, rightSprite;
 
-    // Максимальное расстояние для начала стрельбы
-    private static final double SHOOTING_DISTANCE = 200.0;
-    private static final int FIRE_COOLDOWN = 1000; // Время между выстрелами (в миллисекундах)
-    private long lastShootTime = 0;
-
-    public EnemyTank(PlayerTank playerTank) {
+    public EnemyTank(PlayerTank playerTank, List<Wall> walls) {
         this.playerTank = playerTank;
-        this.direction = (int) (Math.random() * 4);
+        this.walls = walls;
         loadSprites();
-        reset(); // Вызов для начальной позиции врага
+        reset();
     }
 
     private void loadSprites() {
@@ -39,66 +45,114 @@ public class EnemyTank {
     }
 
     public void reset() {
-        int playerX = playerTank.getX();
-        int playerY = playerTank.getY();
-
-        if (playerY < 300) {
-            this.x = (int) (Math.random() * 800);
-            this.y = 600 - HEIGHT;
-        } else {
-            this.x = (int) (Math.random() * 800);
-            this.y = 0;
+        int randSide = (int) (Math.random() * 4);
+        switch (randSide) {
+            case 0 -> { this.x = 0; this.y = (int) (Math.random() * screenHeight); }
+            case 1 -> { this.x = screenWidth - WIDTH; this.y = (int) (Math.random() * screenHeight); }
+            case 2 -> { this.x = (int) (Math.random() * screenWidth); this.y = screenHeight - HEIGHT; }
+            case 3 -> { this.x = (int) (Math.random() * screenWidth); this.y = 0; }
         }
-
         this.health = 5;
         this.direction = (int) (Math.random() * 4);
     }
 
-    public void update() {
-        double distanceToPlayer = getDistanceToPlayer();
-        if (distanceToPlayer < SHOOTING_DISTANCE) {
+    public void update(int fieldWidth, int fieldHeight) {
+        this.screenWidth = fieldWidth;
+        this.screenHeight = fieldHeight;
+
+        if (isPlayerInRange()) {
+            if (!isTooCloseToPlayer()) {
+                moveToPlayer();
+            } else {
+                moveRandomly();  // если слишком близко — двигаться хаотично
+            }
+
             if (canShoot()) {
                 shoot();
             }
         } else {
-            move();
+            moveRandomly();
         }
 
         for (Bullet bullet : bullets) {
-            bullet.update(800, 600);
+            bullet.update(fieldWidth, fieldHeight);  // Используем параметры
         }
+
         bullets.removeIf(bullet -> !bullet.isActive());
     }
 
-    private double getDistanceToPlayer() {
-        int dx = playerTank.getX() - this.x;
-        int dy = playerTank.getY() - this.y;
-        return Math.sqrt(dx * dx + dy * dy);
+
+    private boolean isPlayerInRange() {
+        int dx = playerTank.getX() - x;
+        int dy = playerTank.getY() - y;
+        return Math.sqrt(dx * dx + dy * dy) <= DETECTION_RADIUS;
     }
 
-    private void move() {
-        if (playerTank != null && playerTank.isAlive()) {
-            if (playerTank.getX() > x) { x += speed; direction = 3; }
-            else if (playerTank.getX() < x) { x -= speed; direction = 2; }
+    private boolean isTooCloseToPlayer() {
+        int dx = playerTank.getX() - x;
+        int dy = playerTank.getY() - y;
+        return Math.sqrt(dx * dx + dy * dy) <= MIN_DISTANCE_FROM_PLAYER;
+    }
 
-            if (playerTank.getY() > y) { y += speed; direction = 1; }
-            else if (playerTank.getY() < y) { y -= speed; direction = 0; }
+    private boolean checkCollision(int newX, int newY) {
+        Rectangle newBounds = new Rectangle(newX, newY, WIDTH, HEIGHT);
+        for (Wall wall : walls) {
+            if (newBounds.intersects(wall.getBounds())) return true;
+        }
+        return false;
+    }
+
+    private void moveToPlayer() {
+        int nextX = x, nextY = y;
+        if (playerTank.getX() > x && x + speed < screenWidth - WIDTH) nextX = x + speed;
+        else if (playerTank.getX() < x && x - speed >= 0) nextX = x - speed;
+        if (playerTank.getY() > y && y + speed < screenHeight - HEIGHT) nextY = y + speed;
+        else if (playerTank.getY() < y && y - speed >= 0) nextY = y - speed;
+
+        if (!checkCollision(nextX, nextY)) {
+            x = nextX;
+            y = nextY;
+        }
+
+        updateDirection();
+    }
+
+    private void moveRandomly() {
+        if (Math.random() < 0.01) direction = (int) (Math.random() * 4);
+
+        int nextX = x, nextY = y;
+        switch (direction) {
+            case 0 -> nextY = y - speed;
+            case 1 -> nextY = y + speed;
+            case 2 -> nextX = x - speed;
+            case 3 -> nextX = x + speed;
+        }
+
+        if (!checkCollision(nextX, nextY)) {
+            x = nextX;
+            y = nextY;
         }
     }
 
+    private void updateDirection() {
+        int dx = playerTank.getX() - x;
+        int dy = playerTank.getY() - y;
+
+        if (Math.abs(dx) > Math.abs(dy)) direction = dx > 0 ? 3 : 2;
+        else direction = dy > 0 ? 1 : 0;
+    }
+
     private boolean canShoot() {
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastShootTime >= FIRE_COOLDOWN) {
-            lastShootTime = currentTime;
+        long now = System.currentTimeMillis();
+        if (now - lastShootTime >= SHOOTING_COOLDOWN) {
+            lastShootTime = now;
             return true;
         }
         return false;
     }
 
     private void shoot() {
-        if (Math.random() < 0.01) {
-            bullets.add(createBullet());
-        }
+        if (Math.random() < 0.4) bullets.add(createBullet());
     }
 
     private Bullet createBullet() {
@@ -113,7 +167,6 @@ public class EnemyTank {
 
     public void draw(Graphics g) {
         if (!isAlive()) return;
-
         Image sprite = getCurrentSprite();
         if (sprite != null) g.drawImage(sprite, x, y, WIDTH, HEIGHT, null);
         else {
@@ -122,7 +175,6 @@ public class EnemyTank {
         }
 
         for (Bullet bullet : bullets) bullet.draw(g);
-
         drawHealthBar(g);
     }
 
@@ -130,7 +182,7 @@ public class EnemyTank {
         g.setColor(Color.RED);
         g.fillRect(x, y - 10, WIDTH, 5);
         g.setColor(Color.GREEN);
-        g.fillRect(x, y - 10, (int)((health / 5.0) * WIDTH), 5);
+        g.fillRect(x, y - 10, (int) ((health / 5.0) * WIDTH), 5);
     }
 
     private Image getCurrentSprite() {
@@ -143,20 +195,35 @@ public class EnemyTank {
         };
     }
 
-    public List<Bullet> getBullets() { return bullets; }
-    public Rectangle getBounds() { return new Rectangle(x, y, WIDTH, HEIGHT); }
+    public boolean isAlive() {
+        return health > 0;
+    }
 
-    public void takeDamage() { health--; }
-    public boolean isAlive() { return health > 0; }
+    public void takeDamage() {
+        health--;
+    }
 
-    public int getX() { return x; }
-    public int getY() { return y; }
+    public Rectangle getBounds() {
+        return new Rectangle(x, y, WIDTH, HEIGHT);
+    }
+
+    public List<Bullet> getBullets() {
+        return bullets;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
 }
-
-
-
-
-
 
 
 
