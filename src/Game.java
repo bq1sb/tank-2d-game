@@ -167,24 +167,56 @@ public class Game extends JFrame {
         repaint();
     }
 
-    private void showGameModeSelection() {
-        JPanel gameModePanel = new JPanel();
-        gameModePanel.setLayout(new BoxLayout(gameModePanel, BoxLayout.Y_AXIS));
-        gameModePanel.setBackground(Color.DARK_GRAY);
+    private JButton singlePlayerButton;
+    private JButton multiplayerButton;
+    private JButton backButton;
 
-        JButton singlePlayerButton = new JButton("Одиночная игра");
-        singlePlayerButton.setBackground(Color.GREEN);
-        singlePlayerButton.setForeground(Color.WHITE);
+    private void showGameModeSelection() {
+        JPanel gameModePanel = new JPanel() {
+            Image background;
+
+            {
+                // Загружаем изображение из папки resources
+                background = new ImageIcon(getClass().getResource("/GameMode.png")).getImage();
+            }
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
+
+                // Устанавливаем цвет для прямоугольников
+                g.setColor(Color.RED); // Можешь изменить на любой другой цвет
+
+
+            }
+        };
+
+        gameModePanel.setLayout(null); // Ручное позиционирование
+
+        // 🔲 Кнопка "Single Player"
+        singlePlayerButton = new JButton();
+        singlePlayerButton.setBounds(150, 100, 530, 80);
+        singlePlayerButton.setOpaque(false);
+        singlePlayerButton.setContentAreaFilled(false);
+        singlePlayerButton.setBorderPainted(false);
         singlePlayerButton.addActionListener(e -> startSinglePlayerGame());
 
-        JButton multiplayerButton = new JButton("Многопользовательская игра");
-        multiplayerButton.setBackground(Color.RED);
-        multiplayerButton.setForeground(Color.WHITE);
+        // 🔲 Кнопка "Multiplayer"
+        //
+        multiplayerButton = new JButton();
+        multiplayerButton.setBounds(150, 280, 530, 80);
+        multiplayerButton.setOpaque(false);
+        multiplayerButton.setContentAreaFilled(false);
+        multiplayerButton.setBorderPainted(false);
         multiplayerButton.addActionListener(e -> startMultiplayerGame());
 
-        JButton backButton = new JButton("Назад");
-        backButton.setBackground(Color.GRAY);
-        backButton.setForeground(Color.WHITE);
+        // 🔲 Кнопка "Back"
+        backButton = new JButton();
+        backButton.setBounds(150, 450, 530, 80);
+        backButton.setOpaque(false);
+        backButton.setContentAreaFilled(false);
+        backButton.setBorderPainted(false);
         backButton.addActionListener(e -> showMainMenu());
 
         gameModePanel.add(singlePlayerButton);
@@ -196,22 +228,35 @@ public class Game extends JFrame {
         repaint();
     }
 
+
     private void startSinglePlayerGame() {
-        System.out.println("Одиночная игра запущена!");
-        startGameSession();
-    }
-
-    private void startMultiplayerGame() {
-        System.out.println("Многопользовательская игра запущена!");
-        startGameSession();
-    }
-
-    private void startGameSession() {
+        // Здесь должно быть что-то вроде:
         GameScreen gameScreen = new GameScreen();
-        setContentPane(gameScreen);
+        setContentPane(gameScreen);  // Меняем содержимое панели на экран игры
         revalidate();
         repaint();
     }
+
+    private void startMultiplayerGame() {
+        System.out.println("Запуск многопользовательской игры...");
+
+        // Открываем экран для ввода IP и порта
+        openNetworkSetupScreen();
+    }
+
+    private void openNetworkSetupScreen() {
+        // Переход к экрану настроек сети (IP и порт)
+        JFrame networkFrame = new JFrame("Настройки сети");
+        NetworkSetupScreen networkSetupScreen = new NetworkSetupScreen();
+        networkFrame.setContentPane(networkSetupScreen);
+        networkFrame.setSize(400, 200);  // Размер окна
+        networkFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        networkFrame.setVisible(true);  // Открываем окно настроек сети
+    }
+
+
+
+
 
     private void showSettingsMenu() {
         JPanel settingsPanel = new JPanel() {
@@ -219,10 +264,8 @@ public class Game extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 if (menuBackground != null) {
-                    g.drawImage(menuBackground, 0, 0, getWidth(), getHeight(), this); // Отображаем фон
+                    g.drawImage(menuBackground, 0, 0, getWidth(), getHeight(), this);
                 }
-
-//изображение настроек на весь экран
                 try {
                     InputStream inputStream = getClass().getResourceAsStream("/settings.png");
                     if (inputStream != null) {
