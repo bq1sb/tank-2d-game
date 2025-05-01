@@ -116,6 +116,17 @@ public class GameMap {
         }
         return 0;
     }
+    public void loadNextLevel(int level) {
+        // Загружаем данные следующего уровня в зависимости от номера уровня
+        String[] nextLevelData = LevelLoader.getLevelData(level);
+
+        if (nextLevelData != null) {
+            this.mapData = nextLevelData;
+            loadMap(); // Обновляем карту на основе новых данных уровня
+        } else {
+            System.err.println("Не удалось загрузить данные уровня: " + level);
+        }
+    }
 
     public int getHeightInTiles() {
         if (mapData != null) {

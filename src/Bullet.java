@@ -32,7 +32,8 @@ public class Bullet {
         }
 
         if (isOutOfBounds(screenWidth, screenHeight)) {
-            active = false;  // Деактивируем пулю, если она вышла за экран
+            System.out.println("Пуля вышла за пределы экрана");
+            active = false; // Деактивируем пулю
         }
     }
 
@@ -63,10 +64,9 @@ public class Bullet {
     public void deactivate() {
         active = false;
     }
-
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public String getDirection() { return direction; }
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }
 
 

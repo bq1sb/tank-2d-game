@@ -37,22 +37,11 @@ public class GameWindow extends JFrame {
         }
         return instance;
     }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            // Инициализация игровых объектов
-            List<Wall> gameWalls = new ArrayList<>();
-            PlayerTank player = new PlayerTank(100, 100, gameWalls); // передаём стены в танк
-
-            // Создаем список врагов (пока один)
-            List<EnemyTank> enemiesList = new ArrayList<>();
-            EnemyTank enemy = new EnemyTank(player, gameWalls);
-            enemiesList.add(enemy);
-
-            GameWindow.getInstance(player, gameWalls, enemiesList); // Передаем список врагов
-        });
-    }
 }
+
+
+
+
 
 
 

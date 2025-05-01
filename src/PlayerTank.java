@@ -177,6 +177,15 @@ public class PlayerTank {
     public int getHealth() {
         return health;
     }
+    public void upgradeToLevel2() {
+        this.moveSpeed += 1; // Увеличиваем скорость
+        this.health += 2;   // Увеличиваем здоровье
+    }
+
+    public void upgradeToLevel3() {
+        this.moveSpeed += 1; // Еще больше увеличиваем скорость
+        this.health += 3;   // Дополнительное здоровье
+    }
 
     public boolean isAlive() {
         return health > 0;

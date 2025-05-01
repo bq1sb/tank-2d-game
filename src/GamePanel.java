@@ -91,6 +91,7 @@ public class GamePanel extends JPanel {
         g.drawString("Game Over", getWidth() / 2 - 150, getHeight() / 2);  // Надпись "Game Over"
     }
 
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -111,7 +112,6 @@ public class GamePanel extends JPanel {
         }
     }
 }
-
 
 
 
