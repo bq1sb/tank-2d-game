@@ -1,8 +1,10 @@
+import javax.swing.*;
 import java.awt.*;
 import java.util.Random;
 
-public class Wall {
+public class Wall extends JComponent {
     protected int x, y; // Изменили private на protected
+    protected int health; // Добавляем поле здоровья
     private static final int WIDTH = GameMap.TILE_SIZE;
     private static final int HEIGHT = GameMap.TILE_SIZE;
     private static final Random RANDOM = new Random();
@@ -10,6 +12,7 @@ public class Wall {
     public Wall(int x, int y) {
         this.x = x;
         this.y = y;
+        this.health = 1; // По умолчанию у стены 1 единица здоровья
     }
 
     public Rectangle getBounds() {
@@ -24,6 +27,20 @@ public class Wall {
         return y;
     }
 
+    public int getHealth() {
+        return health;
+    }
+
+    public void takeDamage(int damage) {
+        this.health -= damage;
+        if (this.health < 0) {
+            this.health = 0;
+        }
+    }
+
+    public boolean isDestroyed() {
+        return health <= 0;
+    }
 
     // Рисуем стену с случайными трещинами
     public void draw(Graphics g) {

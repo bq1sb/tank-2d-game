@@ -58,6 +58,12 @@ public class EnemyTank {
         this.health = 5;
         this.direction = (int) (Math.random() * 4);
     }
+    public int getX() {
+        return x;
+    }
+    public int getY() {
+        return y;
+    }
 
     public void update(int fieldWidth, int fieldHeight) {
         this.screenWidth = fieldWidth;

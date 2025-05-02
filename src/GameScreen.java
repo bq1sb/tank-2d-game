@@ -15,6 +15,7 @@ public class GameScreen extends JPanel {
     private int currentLevel = 1;
     private boolean gameOver = false;
     private Image backgroundImage;
+    private List<Item> items = new ArrayList<>(); // Список выпадающих предметов
 
     public GameScreen() {
         setFocusable(true);
@@ -23,7 +24,7 @@ public class GameScreen extends JPanel {
 
         try {
             robot = new Robot();
-            loadBackgroundImage(currentLevel); // Загрузка фона для начального уровня
+            loadBackgroundImage(currentLevel);
         } catch (AWTException e) {
             System.err.println("Не удалось создать Robot: " + e.getMessage());
         }
@@ -84,7 +85,7 @@ public class GameScreen extends JPanel {
 
         Timer gameTimer = new Timer(50, this::updateGame);
         gameTimer.start();
-        loadLevel(currentLevel); // Загрузка уровня после инициализации таймера
+        loadLevel(currentLevel);
         SwingUtilities.invokeLater(this::requestFocusInWindow);
     }
 
@@ -107,12 +108,13 @@ public class GameScreen extends JPanel {
     }
 
     private void loadLevel(int levelNumber) {
-        String[] levelData = GameMap.loadLevelData(levelNumber); // Передаем levelNumber
+        String[] levelData = GameMap.loadLevelData(levelNumber);
         playerTank = new PlayerTank(GameMap.TILE_SIZE * 2, GameMap.TILE_SIZE, null);
         gameMap = new GameMap(levelData, playerTank);
         playerTank.setWalls(gameMap.walls);
         ScoreManager.getInstance().reset();
         loadBackgroundImage(levelNumber);
+        items.clear(); // Очищаем предметы при загрузке нового уровня
     }
 
     private void pressKey(int keyCode) {
@@ -140,6 +142,10 @@ public class GameScreen extends JPanel {
         } else {
             g.setColor(new Color(200, 200, 200));
             g.fillRect(0, 0, getWidth(), getHeight());
+        }
+
+        for (Item item : items) {
+            item.draw(g);
         }
 
         if (gameOver) {
@@ -178,6 +184,18 @@ public class GameScreen extends JPanel {
                 }
             }
 
+            if (playerTank.isAlive()) {
+                List<Item> collectedItems = new ArrayList<>();
+                for (Item item : items) {
+                    if (!item.isCollected() && playerTank.getBounds().intersects(item.getBounds())) {
+                        item.applyEffect(playerTank);
+                        item.setCollected(true);
+                        collectedItems.add(item);
+                    }
+                }
+                items.removeAll(collectedItems);
+            }
+
             List<Bullet> playerBulletsToRemove = new ArrayList<>();
             for (Bullet bullet : playerTank.getBullets()) {
                 boolean bulletHitWall = false;
@@ -189,14 +207,18 @@ public class GameScreen extends JPanel {
                             BrickWall brickWall = (BrickWall) wall;
                             brickWall.takeDamage();
                             if (brickWall.isDestroyed()) {
+                                // Вероятность выпадения зелья (50%)
+                                if (Math.random() < 0.5) {
+                                    items.add(new Item(wall.getX() + GameMap.TILE_SIZE / 2 - 4, wall.getY() + GameMap.TILE_SIZE / 2 - 4));
+                                }
                                 gameMap.walls.remove(wall);
                             }
                         }
-                        break; // Пуля может столкнуться только с одним объектом за кадр
+                        break;
                     }
                 }
                 if (bulletHitWall) {
-                    continue; // Переходим к следующей пуле
+                    continue;
                 }
                 for (EnemyTank enemy : gameMap.enemies) {
                     if (enemy.isAlive() && bullet.getBounds().intersects(enemy.getBounds())) {
@@ -221,9 +243,12 @@ public class GameScreen extends JPanel {
                             bulletHitWall = true;
                             if (wall instanceof BrickWall) {
                                 BrickWall brickWall = (BrickWall) wall;
-                                // Вражеские пули тоже могут ломать кирпичи, если хотите
                                 brickWall.takeDamage();
                                 if (brickWall.isDestroyed()) {
+                                    // Вероятность выпадения зелья (50%)
+                                    if (Math.random() < 0.5) {
+                                        items.add(new Item(wall.getX() + GameMap.TILE_SIZE / 2 - 4, wall.getY() + GameMap.TILE_SIZE / 2 - 4));
+                                    }
                                     gameMap.walls.remove(wall);
                                 }
                             }
@@ -247,18 +272,22 @@ public class GameScreen extends JPanel {
             if (currentLevel == 1 && score >= 2000) {
                 currentLevel = 2;
                 loadLevel(currentLevel);
+                loadBackgroundImage(currentLevel);
                 playerTank.upgradeToLevel2();
             } else if (currentLevel == 2 && score >= 5000) {
                 currentLevel = 3;
                 loadLevel(currentLevel);
+                loadBackgroundImage(currentLevel);
                 playerTank.upgradeToLevel3();
             } else if (currentLevel == 3 && score >= 10000) {
                 currentLevel = 4;
                 loadLevel(currentLevel);
+                loadBackgroundImage(currentLevel);
                 // можно добавить player.upgradeToLevel4();
             } else if (currentLevel == 4 && score >= 20000) {
                 currentLevel = 5;
                 loadLevel(currentLevel);
+                loadBackgroundImage(currentLevel);
                 // можно добавить player.upgradeToLevel5();
             }
 

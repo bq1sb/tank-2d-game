@@ -3,20 +3,23 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class PlayerTank {
     private int x, y;
     private Direction direction;
     private List<Bullet> bullets;
-    private int health = 8;  // Изначально 5 жизней
+    private int health = 5;  // Изначально 5 жизней
     private List<Wall> walls;
-    private int moveSpeed = 5; // Уменьшенная скорость
+    private int moveSpeed = 5;
+    private Random random = new Random();
 
-    private static final int WIDTH = 32; // Уменьшенный размер
-    private static final int HEIGHT = 32; // Уменьшенный размер
+    private static final int WIDTH = 32;
+    private static final int HEIGHT = 32;
+    private static final int MAX_HEALTH = 5; // Максимальное здоровье
 
     private Image upSprite, downSprite, leftSprite, rightSprite;
-    private boolean alive = true; // Новый флаг для состояния танка
+    private boolean alive = true;
 
     public enum Direction {
         UP, DOWN, LEFT, RIGHT
@@ -32,11 +35,10 @@ public class PlayerTank {
     }
 
     public void reset() {
-        // Сбрасываем положение танка и здоровье
-        this.x = GameMap.TILE_SIZE * 2; // Начальная позиция по X
-        this.y = GameMap.TILE_SIZE; // Начальная позиция по Y
-        this.health = 5; // Начальное здоровье
-        this.alive = true; // Восстанавливаем танк как живой
+        this.x = GameMap.TILE_SIZE * 2;
+        this.y = GameMap.TILE_SIZE;
+        this.health = MAX_HEALTH;
+        this.alive = true;
     }
 
     private void loadSprites() {
@@ -108,7 +110,6 @@ public class PlayerTank {
 
     public void update() {
         if (isAlive()) {
-            // Обновление пуль
             for (Bullet bullet : bullets) {
                 bullet.update(800, 600);
             }
@@ -127,18 +128,18 @@ public class PlayerTank {
             }
 
             for (Bullet bullet : bullets) {
-                bullet.draw(g);  // Рисуем пули
+                bullet.draw(g);
             }
 
-            drawHealthBar(g);  // Рисуем шкалу здоровья
+            drawHealthBar(g);
         }
     }
 
     private void drawHealthBar(Graphics g) {
         g.setColor(Color.RED);
-        g.fillRect(x, y - 10, WIDTH, 5);  // Фон шкалы здоровья
+        g.fillRect(x, y - 10, WIDTH, 5);
         g.setColor(Color.GREEN);
-        g.fillRect(x, y - 10, (int) ((health / 5.0) * WIDTH), 5);  // Заполнение шкалы здоровья
+        g.fillRect(x, y - 10, (int) ((health / (double) MAX_HEALTH) * WIDTH), 5);
     }
 
     private Image getCurrentSprite() {
@@ -172,7 +173,6 @@ public class PlayerTank {
         return new Rectangle(x, y, WIDTH, HEIGHT);
     }
 
-    // Метод для получения урона
     public void takeDamage(int damage) {
         if (health > 0) {
             health -= damage;
@@ -182,22 +182,32 @@ public class PlayerTank {
         }
     }
 
-    // Метод для получения текущего здоровья
     public int getHealth() {
         return health;
     }
 
     public void upgradeToLevel2() {
-        this.moveSpeed += 1; // Увеличиваем скорость
-        this.health += 2;   // Увеличиваем здоровье
+        this.moveSpeed += 1;
+        this.health += 2;
     }
 
     public void upgradeToLevel3() {
-        this.moveSpeed += 1; // Еще больше увеличиваем скорость
-        this.health += 3;   // Дополнительное здоровье
+        this.moveSpeed += 1;
+        this.health += 3;
     }
 
     public boolean isAlive() {
         return health > 0;
+    }
+
+    // Новый метод для лечения на 1-2 HP
+    public void heal(int amount) {
+        if (health < MAX_HEALTH) {
+            int healAmount = random.nextInt(2) + 1; // Лечим на 1 или 2 HP
+            health += healAmount;
+            if (health > MAX_HEALTH) {
+                health = MAX_HEALTH; // Не превышаем максимальное здоровье
+            }
+        }
     }
 }
