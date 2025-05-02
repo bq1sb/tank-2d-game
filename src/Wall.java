@@ -2,7 +2,7 @@ import java.awt.*;
 import java.util.Random;
 
 public class Wall {
-    private int x, y;
+    protected int x, y; // Изменили private на protected
     private static final int WIDTH = GameMap.TILE_SIZE;
     private static final int HEIGHT = GameMap.TILE_SIZE;
     private static final Random RANDOM = new Random();
@@ -27,9 +27,9 @@ public class Wall {
 
     // Рисуем стену с случайными трещинами
     public void draw(Graphics g) {
-        g.setColor(new Color(139, 69, 19)); // Основной цвет стены
+        g.setColor(new Color(92, 85, 85)); // Основной цвет стены
         g.fillRect(x, y, WIDTH, HEIGHT);
-        g.setColor(new Color(101, 67, 33)); // Цвет для рамки
+        g.setColor(new Color(35, 30, 30)); // Цвет для рамки
         g.drawRect(x, y, WIDTH, HEIGHT);
 
         // Логика для генерации трещин
@@ -50,10 +50,3 @@ public class Wall {
         }
     }
 }
-
-
-
-
-
-
-

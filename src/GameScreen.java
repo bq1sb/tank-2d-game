@@ -2,235 +2,294 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
-    public class GameScreen extends JPanel {
-        private GameMap gameMap;
-        private PlayerTank playerTank;
-        private JButton upButton, downButton, leftButton, rightButton;
-        private Robot robot;
-        private boolean gameOver = false; // Флаг Game Over
-        private Point[] enemySpawnPoints = {
-                new Point(2 * GameMap.TILE_SIZE, 1 * GameMap.TILE_SIZE),
-                new Point(4 * GameMap.TILE_SIZE, 3 * GameMap.TILE_SIZE)
-        };
-        private int currentSpawnPointIndex = 0;
+public class GameScreen extends JPanel {
+    private GameMap gameMap;
+    private PlayerTank playerTank;
+    private JButton upButton, downButton, leftButton, rightButton;
+    private JButton respawnButton;
+    private Robot robot;
+    private int currentLevel = 1;
+    private boolean gameOver = false;
+    private Image backgroundImage;
 
-        public GameScreen() {
-            setFocusable(true);
-            setLayout(null);
-            requestFocusInWindow();
+    public GameScreen() {
+        setFocusable(true);
+        setLayout(null);
+        requestFocusInWindow();
 
-            try {
-                robot = new Robot();
-            } catch (AWTException e) {
-                System.err.println("Не удалось создать Robot: " + e.getMessage());
-            }
-
-            String[] level1 = {
-                    "WWWWWWWWWWWWWWWWWWWWWWWWW",
-                    "W.......................W",
-                    "W..P....................W", // Линия разрушаемых стен
-                    "W.......................W",
-                    "W.......................W",
-                    "W.......................W",
-                    "W.......WW..............W",
-                    "W........WW.............W",
-                    "W.........WW............W",
-                    "W.......................W",
-                    "W.......................W",
-                    "W.......................W",
-                    "W.......................W",
-                    "W.......................W",
-                    "W.......................W",
-                    "W...................E...W",
-                    "W..................E....W",
-                    "WWWWWWWWWWWWWWWWWWWWWWWWW"
-            };
-            playerTank = new PlayerTank(GameMap.TILE_SIZE * 2, GameMap.TILE_SIZE, null); // Начальное положение игрока
-            gameMap = new GameMap(level1, playerTank); // Создаем GameMap, передавая данные
-            playerTank.setWalls(gameMap.walls); // Теперь устанавливаем список стен
-
-            int buttonWidth = 80;
-            int buttonHeight = 60;
-            int screenWidth = 800; // Увеличенный размер экрана
-            int screenHeight = 600; // Увеличенный размер экрана
-            int controlPanelHeight = 100;
-
-            upButton = new JButton();
-            downButton = new JButton();
-            leftButton = new JButton();
-            rightButton = new JButton();
-
-            upButton.setBounds(screenWidth / 2 - buttonWidth / 2, screenHeight - controlPanelHeight - buttonHeight - 10, buttonWidth, buttonHeight);
-            downButton.setBounds(screenWidth / 2 - buttonWidth / 2, screenHeight - controlPanelHeight + 10, buttonWidth, buttonHeight);
-            leftButton.setBounds(screenWidth / 2 - buttonWidth - 50, screenHeight - controlPanelHeight - buttonHeight / 2, buttonWidth, buttonHeight);
-            rightButton.setBounds(screenWidth / 2 + 50, screenHeight - controlPanelHeight - buttonHeight / 2, buttonWidth, buttonHeight);
-
-            makeButtonInvisible(upButton);
-            makeButtonInvisible(downButton);
-            makeButtonInvisible(leftButton);
-            makeButtonInvisible(rightButton);
-
-            upButton.addActionListener(e -> pressKey(KeyEvent.VK_W));
-            downButton.addActionListener(e -> pressKey(KeyEvent.VK_S));
-            leftButton.addActionListener(e -> pressKey(KeyEvent.VK_A));
-            rightButton.addActionListener(e -> pressKey(KeyEvent.VK_D));
-
-            add(upButton);
-            add(downButton);
-            add(leftButton);
-            add(rightButton);
-
-            addKeyListener(new KeyAdapter() {
-                @Override
-                public void keyPressed(KeyEvent e) {
-                    if (!gameOver && playerTank.isAlive()) { // Добавлена проверка gameOver и жизни игрока
-                        switch (e.getKeyCode()) {
-                            case KeyEvent.VK_W -> playerTank.moveUp();
-                            case KeyEvent.VK_S -> playerTank.moveDown();
-                            case KeyEvent.VK_A -> playerTank.moveLeft();
-                            case KeyEvent.VK_D -> playerTank.moveRight();
-                            case KeyEvent.VK_SPACE -> playerTank.shoot();
-                        }
-                    }
-                }
-            });
-
-            Timer gameTimer = new Timer(50, e -> updateGame());
-            gameTimer.start();
-
-            SwingUtilities.invokeLater(this::requestFocusInWindow);
+        try {
+            robot = new Robot();
+            loadBackgroundImage(currentLevel); // Загрузка фона для начального уровня
+        } catch (AWTException e) {
+            System.err.println("Не удалось создать Robot: " + e.getMessage());
         }
 
-        private void pressKey(int keyCode) {
-            if (robot != null && !gameOver && playerTank.isAlive()) { // Добавлена проверка gameOver и жизни игрока
-                robot.keyPress(keyCode);
-                robot.keyRelease(keyCode);
-            }
-            requestFocusInWindow();
-        }
+        loadLevel(currentLevel);
 
-        private void makeButtonInvisible(JButton button) {
-            button.setOpaque(false);
-            button.setContentAreaFilled(false);
-            button.setBorderPainted(false);
-            button.setFocusPainted(false);
-            button.setText("");
-        }
+        int buttonWidth = 120;
+        int buttonHeight = 60;
+        int screenWidth = 800;
+        int screenHeight = 600;
+        int controlPanelHeight = 100;
 
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            if (gameOver) {
-                // Отображение Game Over
-                g.setColor(Color.BLACK);
-                g.fillRect(0, 0, getWidth(), getHeight());
-                g.setColor(Color.RED);
-                g.setFont(new Font("Arial", Font.BOLD, 50));
-                g.drawString("Game Over", getWidth() / 2 - 150, getHeight() / 2);
-            } else {
-                gameMap.draw(g);
-                playerTank.draw(g);
+        upButton = new JButton();
+        downButton = new JButton();
+        leftButton = new JButton();
+        rightButton = new JButton();
+        respawnButton = new JButton("Start Again");
+        respawnButton.setFont(new Font("Arial", Font.BOLD, 16));
+        respawnButton.setBounds(screenWidth / 2 - buttonWidth / 2, screenHeight / 2 + 80, buttonWidth, buttonHeight);
+        respawnButton.setVisible(false);
+        respawnButton.addActionListener(e -> restartGame());
 
-                playerTank.getBullets().forEach(bullet -> bullet.draw(g));
-                for (EnemyTank enemy : gameMap.enemies) {
-                    if (enemy.isAlive()) {
-                        enemy.draw(g);
-                        enemy.getBullets().forEach(bullet -> bullet.draw(g));
+        upButton.setBounds(screenWidth / 2 - 40, screenHeight - controlPanelHeight - 70, 80, 60);
+        downButton.setBounds(screenWidth / 2 - 40, screenHeight - controlPanelHeight + 10, 80, 60);
+        leftButton.setBounds(screenWidth / 2 - 130, screenHeight - controlPanelHeight - 30, 80, 60);
+        rightButton.setBounds(screenWidth / 2 + 50, screenHeight - controlPanelHeight - 30, 80, 60);
+
+        makeButtonInvisible(upButton);
+        makeButtonInvisible(downButton);
+        makeButtonInvisible(leftButton);
+        makeButtonInvisible(rightButton);
+
+        upButton.addActionListener(e -> pressKey(KeyEvent.VK_W));
+        downButton.addActionListener(e -> pressKey(KeyEvent.VK_S));
+        leftButton.addActionListener(e -> pressKey(KeyEvent.VK_A));
+        rightButton.addActionListener(e -> pressKey(KeyEvent.VK_D));
+
+        add(upButton);
+        add(downButton);
+        add(leftButton);
+        add(rightButton);
+        add(respawnButton);
+
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (!gameOver && playerTank.isAlive()) {
+                    switch (e.getKeyCode()) {
+                        case KeyEvent.VK_W -> playerTank.moveUp();
+                        case KeyEvent.VK_S -> playerTank.moveDown();
+                        case KeyEvent.VK_A -> playerTank.moveLeft();
+                        case KeyEvent.VK_D -> playerTank.moveRight();
+                        case KeyEvent.VK_SPACE -> playerTank.shoot();
                     }
-                }
-                g.setColor(Color.WHITE);
-                g.setFont(new Font("Arial", Font.BOLD, 24));
-                g.drawString("Счёт: " + ScoreManager.getInstance().getScore(), 20, 30);
-            }
-        }
-
-        public void updateGame() {
-            if (!gameOver) {
-                // Обновляем игрока
-                playerTank.update();
-
-                // Обновляем врагов, только если игрок жив
-                if (playerTank.isAlive()) {
-                    for (EnemyTank enemy : gameMap.enemies) {
-                        enemy.update(getWidth(), getHeight());  // передаем размер экрана
-                    }
-                }
-
-                // Проверка столкновений пуль игрока со стенами
-                for (Bullet bullet : new ArrayList<>(playerTank.getBullets())) {
-                    if (checkBulletWallCollision(bullet)) {
-                        playerTank.getBullets().remove(bullet);
-                    }
-                }
-
-                // Проверка столкновений пуль врагов со стенами
-                for (EnemyTank enemy : gameMap.enemies) {
-                    for (Bullet bullet : new ArrayList<>(enemy.getBullets())) {
-                        if (checkBulletWallCollision(bullet)) {
-                            enemy.getBullets().remove(bullet);
-                        }
-                    }
-                }
-
-                // Проверка столкновений пуль игрока с врагами
-                // Проверка столкновений пуль игрока с врагами
-                for (EnemyTank enemy : gameMap.enemies) {
-                    for (Bullet bullet : new ArrayList<>(playerTank.getBullets())) {
-                        if (enemy.isAlive() && bullet.getBounds().intersects(enemy.getBounds())) {
-                            enemy.takeDamage();
-                            playerTank.getBullets().remove(bullet);
-
-                            // Проверка, уничтожен ли враг, и добавление очков
-                            if (!enemy.isAlive()) {
-                                ScoreManager.getInstance().addPoints(100); // Добавляем 100 очков за уничтожение врага
-                            }
-                        }
-                    }
-                }
-
-
-                // Проверка столкновений пуль врагов с игроком
-                for (EnemyTank enemy : gameMap.enemies) {
-                    for (Bullet bullet : new ArrayList<>(enemy.getBullets())) {
-                        if (playerTank.isAlive() && bullet.getBounds().intersects(playerTank.getBounds())) {
-                            playerTank.takeDamage(1);  // Уменьшаем здоровье на 1
-                            enemy.getBullets().remove(bullet);
-                        }
-                    }
-                }
-
-                // Респавн врагов (происходит независимо от состояния игрока)
-                for (int i = 0; i < gameMap.enemies.size(); i++) {
-                    EnemyTank enemy = gameMap.enemies.get(i);
-                    if (!enemy.isAlive()) {
-                        EnemyTank newEnemy = new EnemyTank(playerTank, gameMap.walls);
-                        // Используем начальные позиции врагов из GameMap
-                        if (gameMap.originalEnemyPositions != null && i < gameMap.originalEnemyPositions.size()) {
-                            Point spawn = gameMap.originalEnemyPositions.get(i);
-                            newEnemy.setPosition(spawn.x, spawn.y);
-                            gameMap.enemies.set(i, newEnemy);
-                        }
-                    }
-                }
-
-                // Проверка Game Over
-                if (!playerTank.isAlive() && !gameOver) {
-                    gameOver = true;
-                }
-
-                repaint();
-            }
-        }
-
-        private boolean checkBulletWallCollision(Bullet bullet) {
-            Rectangle bulletRect = bullet.getBounds();
-            for (Wall wall : gameMap.walls) {
-                if (bulletRect.intersects(wall.getBounds())) {
-                    return true;
                 }
             }
-            return false;
+        });
+
+        Timer gameTimer = new Timer(50, this::updateGame);
+        gameTimer.start();
+        loadLevel(currentLevel); // Загрузка уровня после инициализации таймера
+        SwingUtilities.invokeLater(this::requestFocusInWindow);
+    }
+
+    private void loadBackgroundImage(int level) {
+        try {
+            backgroundImage = ImageIO.read(getClass().getResource("/background" + level + ".png"));
+        } catch (IOException e) {
+            System.err.println("Не удалось загрузить фоновое изображение для уровня " + level + ": " + e.getMessage());
+            backgroundImage = null;
         }
     }
+
+    private void restartGame() {
+        gameOver = false;
+        currentLevel = 1;
+        loadLevel(currentLevel);
+        loadBackgroundImage(currentLevel);
+        respawnButton.setVisible(false);
+        requestFocusInWindow();
+    }
+
+    private void loadLevel(int levelNumber) {
+        String[] levelData = GameMap.loadLevelData(levelNumber); // Передаем levelNumber
+        playerTank = new PlayerTank(GameMap.TILE_SIZE * 2, GameMap.TILE_SIZE, null);
+        gameMap = new GameMap(levelData, playerTank);
+        playerTank.setWalls(gameMap.walls);
+        ScoreManager.getInstance().reset();
+        loadBackgroundImage(levelNumber);
+    }
+
+    private void pressKey(int keyCode) {
+        if (robot != null && !gameOver && playerTank.isAlive()) {
+            robot.keyPress(keyCode);
+            robot.keyRelease(keyCode);
+        }
+        requestFocusInWindow();
+    }
+
+    private void makeButtonInvisible(JButton button) {
+        button.setOpaque(false);
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setText("");
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        if (backgroundImage != null) {
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+        } else {
+            g.setColor(new Color(200, 200, 200));
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
+
+        if (gameOver) {
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, getWidth(), getHeight());
+            g.setColor(Color.RED);
+            g.setFont(new Font("Arial", Font.BOLD, 50));
+            g.drawString("Game Over", getWidth() / 2 - 150, getHeight() / 2);
+            respawnButton.setVisible(true);
+        } else {
+            gameMap.draw(g);
+            playerTank.draw(g);
+
+            playerTank.getBullets().forEach(bullet -> bullet.draw(g));
+            for (EnemyTank enemy : gameMap.enemies) {
+                if (enemy.isAlive()) {
+                    enemy.draw(g);
+                    enemy.getBullets().forEach(bullet -> bullet.draw(g));
+                }
+            }
+
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 24));
+            g.drawString("Счёт: " + ScoreManager.getInstance().getScore(), 20, 30);
+            g.drawString("Уровень: " + currentLevel, 20, 60);
+        }
+    }
+
+    public void updateGame(ActionEvent e) {
+        if (!gameOver) {
+            playerTank.update();
+
+            if (playerTank.isAlive()) {
+                for (EnemyTank enemy : gameMap.enemies) {
+                    enemy.update(getWidth(), getHeight());
+                }
+            }
+
+            List<Bullet> playerBulletsToRemove = new ArrayList<>();
+            for (Bullet bullet : playerTank.getBullets()) {
+                boolean bulletHitWall = false;
+                for (Wall wall : new ArrayList<>(gameMap.walls)) {
+                    if (bullet.getBounds().intersects(wall.getBounds())) {
+                        playerBulletsToRemove.add(bullet);
+                        bulletHitWall = true;
+                        if (wall instanceof BrickWall) {
+                            BrickWall brickWall = (BrickWall) wall;
+                            brickWall.takeDamage();
+                            if (brickWall.isDestroyed()) {
+                                gameMap.walls.remove(wall);
+                            }
+                        }
+                        break; // Пуля может столкнуться только с одним объектом за кадр
+                    }
+                }
+                if (bulletHitWall) {
+                    continue; // Переходим к следующей пуле
+                }
+                for (EnemyTank enemy : gameMap.enemies) {
+                    if (enemy.isAlive() && bullet.getBounds().intersects(enemy.getBounds())) {
+                        enemy.takeDamage();
+                        playerBulletsToRemove.add(bullet);
+                        if (!enemy.isAlive()) {
+                            ScoreManager.getInstance().addPoints(100);
+                        }
+                        break;
+                    }
+                }
+            }
+            playerTank.getBullets().removeAll(playerBulletsToRemove);
+
+            List<Bullet> enemyBulletsToRemove = new ArrayList<>();
+            for (EnemyTank enemy : gameMap.enemies) {
+                for (Bullet bullet : enemy.getBullets()) {
+                    boolean bulletHitWall = false;
+                    for (Wall wall : new ArrayList<>(gameMap.walls)) {
+                        if (bullet.getBounds().intersects(wall.getBounds())) {
+                            enemyBulletsToRemove.add(bullet);
+                            bulletHitWall = true;
+                            if (wall instanceof BrickWall) {
+                                BrickWall brickWall = (BrickWall) wall;
+                                // Вражеские пули тоже могут ломать кирпичи, если хотите
+                                brickWall.takeDamage();
+                                if (brickWall.isDestroyed()) {
+                                    gameMap.walls.remove(wall);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    if (bulletHitWall) {
+                        continue;
+                    }
+                    if (playerTank.isAlive() && bullet.getBounds().intersects(playerTank.getBounds())) {
+                        playerTank.takeDamage(1);
+                        enemyBulletsToRemove.add(bullet);
+                        break;
+                    }
+                }
+                enemy.getBullets().removeAll(enemyBulletsToRemove);
+            }
+
+            int score = ScoreManager.getInstance().getScore();
+
+            if (currentLevel == 1 && score >= 2000) {
+                currentLevel = 2;
+                loadLevel(currentLevel);
+                playerTank.upgradeToLevel2();
+            } else if (currentLevel == 2 && score >= 5000) {
+                currentLevel = 3;
+                loadLevel(currentLevel);
+                playerTank.upgradeToLevel3();
+            } else if (currentLevel == 3 && score >= 10000) {
+                currentLevel = 4;
+                loadLevel(currentLevel);
+                // можно добавить player.upgradeToLevel4();
+            } else if (currentLevel == 4 && score >= 20000) {
+                currentLevel = 5;
+                loadLevel(currentLevel);
+                // можно добавить player.upgradeToLevel5();
+            }
+
+
+            for (int i = 0; i < gameMap.enemies.size(); i++) {
+                EnemyTank enemy = gameMap.enemies.get(i);
+                if (!enemy.isAlive()) {
+                    EnemyTank newEnemy = new EnemyTank(playerTank, gameMap.walls);
+                    if (gameMap.originalEnemyPositions != null && i < gameMap.originalEnemyPositions.size()) {
+                        Point spawn = gameMap.originalEnemyPositions.get(i);
+                        newEnemy.setPosition(spawn.x, spawn.y);
+                        gameMap.enemies.set(i, newEnemy);
+                    }
+                }
+            }
+
+            if (!playerTank.isAlive() && !gameOver) {
+                gameOver = true;
+            }
+
+            repaint();
+        }
+    }
+
+    private boolean checkBulletWallCollision(Bullet bullet) {
+        Rectangle bulletRect = bullet.getBounds();
+        for (Wall wall : gameMap.walls) {
+            if (bulletRect.intersects(wall.getBounds())) {
+                return true;
+            }
+        }
+        return false;
+    }
+}

@@ -18,7 +18,7 @@ public class GameFrame extends JFrame {
         playerTank = new PlayerTank(100, 100, null); // Начальные координаты и список стен
 
         // Загружаем карту, создаем стены и врагов
-        gameMap = new GameMap(GameMap.loadLevelData(), playerTank);
+        gameMap = new GameMap(GameMap.loadLevelData(1), playerTank);
         walls = gameMap.walls;
         enemies = gameMap.enemies; // Получаем список врагов из GameMap
         playerTank.setWalls(walls); // Устанавливаем стены игроку

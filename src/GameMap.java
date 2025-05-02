@@ -1,141 +1,164 @@
-// GameMap.java
-import java.util.ArrayList;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class GameMap {
+    public static final int TILE_SIZE = 32;
+    public List<Wall> walls;
+    public List<EnemyTank> enemies;
+    public List<Point> originalEnemyPositions;
+    private PlayerTank playerTank;
 
-    public static final int TILE_SIZE = 32; // Или любое другое желаемое значение
+    public GameMap(String[] data, PlayerTank player) {
+        this.playerTank = player;
+        this.walls = new ArrayList<>();
+        this.enemies = new ArrayList<>();
+        this.originalEnemyPositions = new ArrayList<>();
+        loadMap(data); // Теперь loadMap принимает данные уровня
+    }
 
-    private String[] mapData;
-    public List<Wall> walls = new ArrayList<>();
-    public List<BreakableWall> breakableWalls = new ArrayList<>();
-    public List<EnemyTank> enemies = new ArrayList<>();
-    public List<Point> originalEnemyPositions = new ArrayList<>();
-    public PlayerTank player;
-
-    public enum TileType {
-        WALL('W'),
-        BREAKABLE_WALL('B'),
-        ENEMY_TANK('E'),
-        PLAYER('P'),
-        EMPTY('.');
-
-        private final char symbol;
-
-        TileType(char symbol) {
-            this.symbol = symbol;
-        }
-
-        public char getSymbol() {
-            return symbol;
-        }
-
-        public static TileType fromChar(char c) {
-            for (TileType type : TileType.values()) {
-                if (type.getSymbol() == c) {
-                    return type;
-                }
-            }
-            return EMPTY;
+    public static String[] loadLevelData(int levelNumber) {
+        if (levelNumber == 1) {
+            return new String[]{
+                    "WWWWWWWWWWWWWWWWWWWWWWWWW",
+                    "W............BB.........W",
+                    "W....BB............BB...W",
+                    "W..WWWWWWWWWWWWWWWWWWW..W",
+                    "W..W...BB........E...W..W",
+                    "W..W.................W..W",
+                    "W.E.....BB......BB......W",
+                    "W.......................W",
+                    "W...BB......P...BB......W",
+                    "W.......................W",
+                    "W..W.........BB......W..W",
+                    "W..W..BB.............W..W",
+                    "W..W..E.......BB.....W..W",
+                    "W..W...BB............W..W",
+                    "W..WWWWWWWWWWWWWWWWWWW..W",
+                    "W.........BB.......BB...W",
+                    "W...BB..................W",
+                    "WWWWWWWWWWWWWWWWWWWWWWWWW"
+            };
+        } else if (levelNumber == 2) {
+            return new String[]{
+                    "WWWWWWWWWWWWWWWWWWWWWWWWW",
+                    "W.......................W",
+                    "W.....P...BB............W",
+                    "W..W.................W..W",
+                    "W..W..........BB.....W..W",
+                    "W..W..........BB.....W..W",
+                    "W..W..E.............EW..W",
+                    "W..W.................W..W",
+                    "W..W.....BB..........W..W",
+                    "W..W.....BB..........W..W",
+                    "W..W.................W..W",
+                    "W..W.................W..W",
+                    "W..W........E....BB..W..W",
+                    "W.....BB................W",
+                    "W.....BB.....B....BB....W",
+                    "W..........E............W",
+                    "W.......................W",
+                    "WWWWWWWWWWWWWWWWWWWWWWWWW"
+            };
+        } else if (levelNumber == 3) {
+            return new String[]{
+                    "WWWWWWWWWWWWWWWWWWWWWWWWW",
+                    "W........WW.............W",
+                    "W..P.....WW..E...WW.....W",
+                    "W....WW..........WW.....W",
+                    "W....WW.................W",
+                    "W.............WW........W",
+                    "W..WW....E....WW........W",
+                    "W..WW...WW........E.....W",
+                    "W.......WW.........WW...W",
+                    "W...........WW.....WW...W",
+                    "W....E......WW..........W",
+                    "W..WW...........WW......W",
+                    "W..WW....WW.....WW..WW..W",
+                    "W........WW...E.....WW..W",
+                    "W....WW......WW.........W",
+                    "W....WW......WW.........W",
+                    "W.......................W",
+                    "WWWWWWWWWWWWWWWWWWWWWWWWW"
+            };
+        } else if (levelNumber == 4) {
+            return new String[]{
+                    "WWWWWWWWWWWWWWWWWWWWWWWWW",
+                    "W..................E....W",
+                    "W..P....................W",
+                    "W...W..............W....W",
+                    "W...WWWWWWWWWWWWWWWWW...W",
+                    "W..........WWW..........W",
+                    "W...W....E..........W...W",
+                    "W...WWWWWWWWWWWWWWWWW...W",
+                    "W....................E..W",
+                    "W.....E.........E.......W",
+                    "W...WWWWWWWWWWWWWWWWW...W",
+                    "W...W...............W...W",
+                    "W..........WWW..........W",
+                    "W...WWWWWWWWWWWWWWWWW...W",
+                    "W...W..E............W...W",
+                    "W.......................W",
+                    "W.......................W",
+                    "WWWWWWWWWWWWWWWWWWWWWWWWW"
+            };
+        } else { // levelNumber == 5 (или любой другой)
+            return new String[]{
+                    "WWWWWWWWWWWWWWWWWWWWWWWWW",
+                    "W...........W...........W",
+                    "W..P....W..........W....W",
+                    "W............W..........W",
+                    "W....E.............W....W",
+                    "W.....W..W.....W........W",
+                    "W....W...E.........W....W",
+                    "W.....W.....W...........W",
+                    "W..W...........W.....E..W",
+                    "W........W.........W....W",
+                    "W...W..........W........W",
+                    "W........W.........W....W",
+                    "W....E.......W..........W",
+                    "W......W................W",
+                    "W....E...W....W....W....W",
+                    "W....W...........W......W",
+                    "W........W.E.....W......W",
+                    "WWWWWWWWWWWWWWWWWWWWWWWWW"
+            };
         }
     }
 
-    public GameMap(String[] mapData, PlayerTank player) {
-        this.player = player;
-        this.mapData = mapData;
-        if (mapData != null) {
-            loadMap();
-        }
-    }
-
-    public static String[] loadLevelData() {
-        String[] level = {
-        };
-        return level;
-    }
-
-    public void loadMap() {
+    private void loadMap(String[] data) {
         walls.clear();
-        breakableWalls.clear();
         enemies.clear();
         originalEnemyPositions.clear();
-
-        if (mapData != null) {
-            for (int y = 0; y < mapData.length; y++) {
-                for (int x = 0; x < mapData[y].length(); x++) {
-                    char tile = mapData[y].charAt(x);
-                    int pixelX = x * TILE_SIZE;
-                    int pixelY = y * TILE_SIZE;
-
-                    TileType tileType = TileType.fromChar(tile);
-
-                    switch (tileType) {
-                        case WALL:
-                            walls.add(new Wall(pixelX, pixelY));
-                            break;
-                        case BREAKABLE_WALL:
-                            breakableWalls.add(new BreakableWall(pixelX, pixelY));
-                            break;
-                        case ENEMY_TANK:
-                            EnemyTank enemy = new EnemyTank(player, walls);
-                            enemy.setPosition(pixelX, pixelY); // Устанавливаем позицию из карты
-                            enemies.add(enemy);
-                            originalEnemyPositions.add(new Point(pixelX, pixelY));
-                            break;
-                        case PLAYER:
-                            player.setPosition(pixelX, pixelY);
-                            break;
-                        case EMPTY:
-                            break;
+        for (int y = 0; y < data.length; y++) {
+            for (int x = 0; x < data[y].length(); x++) {
+                switch (data[y].charAt(x)) {
+                    case 'W' -> walls.add(new Wall(x * TILE_SIZE, y * TILE_SIZE));
+                    case 'E' -> {
+                        EnemyTank enemyTank = new EnemyTank(playerTank, walls);
+                        enemyTank.setPosition(x * TILE_SIZE, y * TILE_SIZE);
+                        enemies.add(enemyTank);
+                        originalEnemyPositions.add(new Point(x * TILE_SIZE, y * TILE_SIZE));
                     }
+                    case 'P' -> playerTank.setPosition(x * TILE_SIZE, y * TILE_SIZE);
+                    case 'B' -> walls.add(new BrickWall(x * TILE_SIZE, y * TILE_SIZE)); // Создаем BrickWall
                 }
             }
         }
+    }
+
+    public void update() {
+        // Обновление логики карты, если необходимо
     }
 
     public void draw(Graphics g) {
         for (Wall wall : walls) {
             wall.draw(g);
         }
-
-        for (BreakableWall bWall : breakableWalls) {
-            bWall.draw(g);
-        }
-
         for (EnemyTank enemy : enemies) {
-            enemy.draw(g);
+            if (enemy.isAlive()) {
+                enemy.draw(g);
+            }
         }
-
-        player.draw(g);
-    }
-
-    public int getWidthInTiles() {
-        if (mapData != null && mapData.length > 0) {
-            return mapData[0].length();
-        }
-        return 0;
-    }
-    public void loadNextLevel(int level) {
-        // Загружаем данные следующего уровня в зависимости от номера уровня
-        String[] nextLevelData = LevelLoader.getLevelData(level);
-
-        if (nextLevelData != null) {
-            this.mapData = nextLevelData;
-            loadMap(); // Обновляем карту на основе новых данных уровня
-        } else {
-            System.err.println("Не удалось загрузить данные уровня: " + level);
-        }
-    }
-
-    public int getHeightInTiles() {
-        if (mapData != null) {
-            return mapData.length;
-        }
-        return 0;
     }
 }
-
-
-
-

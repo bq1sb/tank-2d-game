@@ -8,14 +8,15 @@ public class PlayerTank {
     private int x, y;
     private Direction direction;
     private List<Bullet> bullets;
-    private int health = 5;  // Изначально 5 жизней
+    private int health = 8;  // Изначально 5 жизней
     private List<Wall> walls;
-    private int moveSpeed = 3; // Уменьшенная скорость
+    private int moveSpeed = 5; // Уменьшенная скорость
 
     private static final int WIDTH = 32; // Уменьшенный размер
     private static final int HEIGHT = 32; // Уменьшенный размер
 
     private Image upSprite, downSprite, leftSprite, rightSprite;
+    private boolean alive = true; // Новый флаг для состояния танка
 
     public enum Direction {
         UP, DOWN, LEFT, RIGHT
@@ -28,6 +29,14 @@ public class PlayerTank {
         this.bullets = new ArrayList<>();
         this.walls = walls;
         loadSprites();
+    }
+
+    public void reset() {
+        // Сбрасываем положение танка и здоровье
+        this.x = GameMap.TILE_SIZE * 2; // Начальная позиция по X
+        this.y = GameMap.TILE_SIZE; // Начальная позиция по Y
+        this.health = 5; // Начальное здоровье
+        this.alive = true; // Восстанавливаем танк как живой
     }
 
     private void loadSprites() {
@@ -96,6 +105,7 @@ public class PlayerTank {
         bullets.add(new Bullet(x + WIDTH / 2, y + HEIGHT / 2, direction.toString()));
     }
 
+
     public void update() {
         if (isAlive()) {
             // Обновление пуль
@@ -105,7 +115,6 @@ public class PlayerTank {
             bullets.removeIf(bullet -> !bullet.isActive());
         }
     }
-
 
     public void draw(Graphics g) {
         if (isAlive()) {
@@ -177,6 +186,7 @@ public class PlayerTank {
     public int getHealth() {
         return health;
     }
+
     public void upgradeToLevel2() {
         this.moveSpeed += 1; // Увеличиваем скорость
         this.health += 2;   // Увеличиваем здоровье
@@ -191,25 +201,3 @@ public class PlayerTank {
         return health > 0;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

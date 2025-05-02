@@ -13,16 +13,15 @@ public class ScoreManager {
         return instance;
     }
 
-    public void addPoints(int points) {
-        score += points;
-    }
-
     public int getScore() {
         return score;
     }
 
-    public void resetScore() {
-        score = 0;
+    public void addPoints(int points) {
+        score += points;
+    }
+
+    public void reset() {
+        score = 0; // Сбрасываем очки
     }
 }
-

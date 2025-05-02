@@ -13,6 +13,8 @@ public class Game extends JFrame {
     private ImageIcon logoIcon;
 
 
+
+
     // области кнопок для обычного режима
     private final Rectangle normalStartButton = new Rectangle(80, 40, 650, 110);
     private final Rectangle normalSettingsButton = new Rectangle(80, 230, 650, 110);
@@ -128,7 +130,7 @@ public class Game extends JFrame {
         repaint();
     }
 
-    private void showMainMenu() {
+    public void showMainMenu() {
         JPanel menuPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {

@@ -18,8 +18,8 @@ public class EnemyTank {
     private static final int HEIGHT = 32;
     private static final double DETECTION_RADIUS = 300.0;
     private static final int SHOOTING_COOLDOWN = 500;
-    private static final double MIN_DISTANCE_FROM_PLAYER = 100.0;
-    // Используйте размеры игрового поля, переданные в update()
+    private static final double MIN_DISTANCE_FROM_PLAYER = 70.0;
+
     private int screenWidth;
     private int screenHeight;
 
@@ -30,7 +30,6 @@ public class EnemyTank {
         this.playerTank = playerTank;
         this.walls = walls;
         loadSprites();
-        reset();
     }
 
     private void loadSprites() {
@@ -44,7 +43,10 @@ public class EnemyTank {
         }
     }
 
-    public void reset() {
+    public void reset(int fieldWidth, int fieldHeight) {
+        this.screenWidth = fieldWidth;
+        this.screenHeight = fieldHeight;
+
         int randSide = (int) (Math.random() * 4);
         switch (randSide) {
             case 0 -> { this.x = 0; this.y = (int) (Math.random() * screenHeight); }
@@ -52,6 +54,7 @@ public class EnemyTank {
             case 2 -> { this.x = (int) (Math.random() * screenWidth); this.y = screenHeight - HEIGHT; }
             case 3 -> { this.x = (int) (Math.random() * screenWidth); this.y = 0; }
         }
+
         this.health = 5;
         this.direction = (int) (Math.random() * 4);
     }
@@ -64,10 +67,10 @@ public class EnemyTank {
             if (!isTooCloseToPlayer()) {
                 moveToPlayer();
             } else {
-                moveRandomly();  // если слишком близко — двигаться хаотично
+                moveRandomly();
             }
 
-            if (canShoot()) {
+            if (canShoot() && isPlayerInDirectSight()) {
                 shoot();
             }
         } else {
@@ -75,12 +78,11 @@ public class EnemyTank {
         }
 
         for (Bullet bullet : bullets) {
-            bullet.update(fieldWidth, fieldHeight);  // Используем параметры
+            bullet.update(fieldWidth, fieldHeight);
         }
 
         bullets.removeIf(bullet -> !bullet.isActive());
     }
-
 
     private boolean isPlayerInRange() {
         int dx = playerTank.getX() - x;
@@ -92,6 +94,27 @@ public class EnemyTank {
         int dx = playerTank.getX() - x;
         int dy = playerTank.getY() - y;
         return Math.sqrt(dx * dx + dy * dy) <= MIN_DISTANCE_FROM_PLAYER;
+    }
+
+    // Проверка, есть ли прямой путь к игроку (без препятствий)
+    private boolean isPlayerInDirectSight() {
+        int dx = playerTank.getX() - x;
+        int dy = playerTank.getY() - y;
+        double angle = Math.atan2(dy, dx);
+
+        // Расстояние между врагом и игроком
+        double distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Проверяем, нет ли препятствий по пути
+        for (double i = 0; i < distance; i += 10) {
+            int checkX = x + (int) (i * Math.cos(angle));
+            int checkY = y + (int) (i * Math.sin(angle));
+
+            if (checkCollision(checkX, checkY)) {
+                return false; // Препятствия на пути
+            }
+        }
+        return true; // Прямой путь к игроку
     }
 
     private boolean checkCollision(int newX, int newY) {
@@ -106,6 +129,7 @@ public class EnemyTank {
         int nextX = x, nextY = y;
         if (playerTank.getX() > x && x + speed < screenWidth - WIDTH) nextX = x + speed;
         else if (playerTank.getX() < x && x - speed >= 0) nextX = x - speed;
+
         if (playerTank.getY() > y && y + speed < screenHeight - HEIGHT) nextY = y + speed;
         else if (playerTank.getY() < y && y - speed >= 0) nextY = y - speed;
 
@@ -165,6 +189,7 @@ public class EnemyTank {
         };
     }
 
+
     public void draw(Graphics g) {
         if (!isAlive()) return;
         Image sprite = getCurrentSprite();
@@ -211,23 +236,8 @@ public class EnemyTank {
         return bullets;
     }
 
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
     public void setPosition(int x, int y) {
         this.x = x;
         this.y = y;
     }
 }
-
-
-
-
-
-
-
