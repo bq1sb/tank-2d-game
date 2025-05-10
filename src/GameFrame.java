@@ -6,7 +6,7 @@ public class GameFrame extends JFrame {
     private GamePanel gamePanel;
     private PlayerTank playerTank;
     private List<Wall> walls;
-    private List<EnemyTank> enemies; // Список врагов
+    private List<EnemyTank> enemies;
     private GameMap gameMap;
 
     public GameFrame() {
@@ -14,16 +14,11 @@ public class GameFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
 
-        // Создаем игрока
-        playerTank = new PlayerTank(100, 100, null); // Начальные координаты и список стен
-
-        // Загружаем карту, создаем стены и врагов
+        playerTank = new PlayerTank(100, 100, null);
         gameMap = new GameMap(GameMap.loadLevelData(1), playerTank);
         walls = gameMap.walls;
-        enemies = gameMap.enemies; // Получаем список врагов из GameMap
-        playerTank.setWalls(walls); // Устанавливаем стены игроку
-
-        // Создаем GamePanel, передавая игрока, стены и список врагов
+        enemies = gameMap.enemies;
+        playerTank.setWalls(walls);
         gamePanel = new GamePanel(playerTank, walls, enemies);
         add(gamePanel);
 
@@ -39,7 +34,7 @@ public class GameFrame extends JFrame {
             while (true) {
                 gamePanel.update();
                 try {
-                    Thread.sleep(16); // ~60 FPS
+                    Thread.sleep(16); // 60 FPS
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

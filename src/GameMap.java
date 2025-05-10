@@ -14,29 +14,29 @@ public class GameMap {
         this.walls = new ArrayList<>();
         this.enemies = new ArrayList<>();
         this.originalEnemyPositions = new ArrayList<>();
-        loadMap(data); // Теперь loadMap принимает данные уровня
+        loadMap(data);
     }
 
     public static String[] loadLevelData(int levelNumber) {
         if (levelNumber == 1) {
             return new String[]{
                     "WWWWWWWWWWWWWWWWWWWWWWWWW",
-                    "W............BB.........W",
-                    "W....BB............BB...W",
+                    "W............B..........W",
+                    "W.....B............B....W",
                     "W..WWWWWWWWWWWWWWWWWWW..W",
-                    "W..W...BB........E...W..W",
+                    "W..W...B.........E...W..W",
                     "W..W.................W..W",
-                    "W.E.....BB......BB......W",
+                    "W.......B.......B.......W",
+                    "W....E..................W",
+                    "W...B.......P...B.......W",
                     "W.......................W",
-                    "W...BB......P...BB......W",
-                    "W.......................W",
-                    "W..W.........BB......W..W",
-                    "W..W..BB.............W..W",
-                    "W..W..E.......BB.....W..W",
-                    "W..W...BB............W..W",
+                    "W..W.........B.......W..W",
+                    "W..W.....B...........W..W",
+                    "W..W..E.......B......W..W",
+                    "W..W.................W..W",
                     "W..WWWWWWWWWWWWWWWWWWW..W",
-                    "W.........BB.......BB...W",
-                    "W...BB..................W",
+                    "W.........B........B....W",
+                    "W...B...................W",
                     "WWWWWWWWWWWWWWWWWWWWWWWWW"
             };
         } else if (levelNumber == 2) {
@@ -102,7 +102,7 @@ public class GameMap {
                     "W.......................W",
                     "WWWWWWWWWWWWWWWWWWWWWWWWW"
             };
-        } else { // levelNumber == 5 (или любой другой)
+        } else {
             return new String[]{
                     "WWWWWWWWWWWWWWWWWWWWWWWWW",
                     "W...........W...........W",
@@ -141,14 +141,10 @@ public class GameMap {
                         originalEnemyPositions.add(new Point(x * TILE_SIZE, y * TILE_SIZE));
                     }
                     case 'P' -> playerTank.setPosition(x * TILE_SIZE, y * TILE_SIZE);
-                    case 'B' -> walls.add(new BrickWall(x * TILE_SIZE, y * TILE_SIZE)); // Создаем BrickWall
+                    case 'B' -> walls.add(new BrickWall(x * TILE_SIZE, y * TILE_SIZE));
                 }
             }
         }
-    }
-
-    public void update() {
-        // Обновление логики карты, если необходимо
     }
 
     public void draw(Graphics g) {

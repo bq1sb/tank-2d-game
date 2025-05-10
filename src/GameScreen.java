@@ -15,7 +15,10 @@ public class GameScreen extends JPanel {
     private int currentLevel = 1;
     private boolean gameOver = false;
     private Image backgroundImage;
-    private List<Item> items = new ArrayList<>(); // Список выпадающих предметов
+    private Image gameOverImage;
+    private static final int GAME_OVER_IMAGE_WIDTH = 800;
+    private static final int GAME_OVER_IMAGE_HEIGHT = 630;
+    private List<Item> items = new ArrayList<>();
 
     public GameScreen() {
         setFocusable(true);
@@ -25,6 +28,7 @@ public class GameScreen extends JPanel {
         try {
             robot = new Robot();
             loadBackgroundImage(currentLevel);
+            loadGameOverImage();
         } catch (AWTException e) {
             System.err.println("Не удалось создать Robot: " + e.getMessage());
         }
@@ -89,6 +93,15 @@ public class GameScreen extends JPanel {
         SwingUtilities.invokeLater(this::requestFocusInWindow);
     }
 
+    private void loadGameOverImage() {
+        try {
+            gameOverImage = ImageIO.read(getClass().getResource("/game_over.png"));
+        } catch (IOException e) {
+            System.err.println("Не удалось загрузить изображение 'Game Over': " + e.getMessage());
+            gameOverImage = null;
+        }
+    }
+
     private void loadBackgroundImage(int level) {
         try {
             backgroundImage = ImageIO.read(getClass().getResource("/background" + level + ".png"));
@@ -114,7 +127,7 @@ public class GameScreen extends JPanel {
         playerTank.setWalls(gameMap.walls);
         ScoreManager.getInstance().reset();
         loadBackgroundImage(levelNumber);
-        items.clear(); // Очищаем предметы при загрузке нового уровня
+        items.clear();
     }
 
     private void pressKey(int keyCode) {
@@ -151,9 +164,11 @@ public class GameScreen extends JPanel {
         if (gameOver) {
             g.setColor(Color.BLACK);
             g.fillRect(0, 0, getWidth(), getHeight());
-            g.setColor(Color.RED);
-            g.setFont(new Font("Arial", Font.BOLD, 50));
-            g.drawString("Game Over", getWidth() / 2 - 150, getHeight() / 2);
+            if (gameOverImage != null) {
+                int imageX = getWidth() / 2 - GAME_OVER_IMAGE_WIDTH / 2;
+                int imageY = getHeight() / 2 - GAME_OVER_IMAGE_HEIGHT / 2 - 30;
+                g.drawImage(gameOverImage, imageX, imageY, GAME_OVER_IMAGE_WIDTH, GAME_OVER_IMAGE_HEIGHT, this);
+            }
             respawnButton.setVisible(true);
         } else {
             gameMap.draw(g);
@@ -207,7 +222,6 @@ public class GameScreen extends JPanel {
                             BrickWall brickWall = (BrickWall) wall;
                             brickWall.takeDamage();
                             if (brickWall.isDestroyed()) {
-                                // Вероятность выпадения зелья (50%)
                                 if (Math.random() < 0.5) {
                                     items.add(new Item(wall.getX() + GameMap.TILE_SIZE / 2 - 4, wall.getY() + GameMap.TILE_SIZE / 2 - 4));
                                 }
@@ -245,7 +259,6 @@ public class GameScreen extends JPanel {
                                 BrickWall brickWall = (BrickWall) wall;
                                 brickWall.takeDamage();
                                 if (brickWall.isDestroyed()) {
-                                    // Вероятность выпадения зелья (50%)
                                     if (Math.random() < 0.5) {
                                         items.add(new Item(wall.getX() + GameMap.TILE_SIZE / 2 - 4, wall.getY() + GameMap.TILE_SIZE / 2 - 4));
                                     }
@@ -283,12 +296,10 @@ public class GameScreen extends JPanel {
                 currentLevel = 4;
                 loadLevel(currentLevel);
                 loadBackgroundImage(currentLevel);
-                // можно добавить player.upgradeToLevel4();
             } else if (currentLevel == 4 && score >= 20000) {
                 currentLevel = 5;
                 loadLevel(currentLevel);
                 loadBackgroundImage(currentLevel);
-                // можно добавить player.upgradeToLevel5();
             }
 
 
@@ -312,13 +323,4 @@ public class GameScreen extends JPanel {
         }
     }
 
-    private boolean checkBulletWallCollision(Bullet bullet) {
-        Rectangle bulletRect = bullet.getBounds();
-        for (Wall wall : gameMap.walls) {
-            if (bulletRect.intersects(wall.getBounds())) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

@@ -14,7 +14,6 @@ public class Tank {
     }
 
     protected void updateTankImage() {
-        // логика для обновления изображения танка
         switch (direction) {
             case "UP":
                 tankImage = new ImageIcon(getClass().getResource("/tank_up.png")).getImage();
@@ -34,8 +33,6 @@ public class Tank {
     public Bullet fire() {
         int bulletX = x + 20;
         int bulletY = y + 20;
-
-        // смещаем чтобы пуля вылетала из танка
         switch (direction) {
             case "UP" -> bulletY -= 20;
             case "DOWN" -> bulletY += 20;
@@ -45,9 +42,6 @@ public class Tank {
 
         return new Bullet(bulletX, bulletY, direction);
     }
-
-
-    // Метод для рисования танка
     public void draw(Graphics g) {
         g.drawImage(tankImage, x, y, 50, 50, null); // Рисуем танк
     }
@@ -77,7 +71,6 @@ public class Tank {
         updateTankImage();
     }
 
-    // Геттеры и сеттеры
     public int getX() {
         return x;
     }

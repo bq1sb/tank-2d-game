@@ -9,17 +9,16 @@ public class PlayerTank {
     private int x, y;
     private Direction direction;
     private List<Bullet> bullets;
-    private int health = 5;  // Изначально 5 жизней
+    private int health = 7;
     private List<Wall> walls;
     private int moveSpeed = 5;
     private Random random = new Random();
 
     private static final int WIDTH = 32;
     private static final int HEIGHT = 32;
-    private static final int MAX_HEALTH = 5; // Максимальное здоровье
+    private static final int MAX_HEALTH = 7;
 
     private Image upSprite, downSprite, leftSprite, rightSprite;
-    private boolean alive = true;
 
     public enum Direction {
         UP, DOWN, LEFT, RIGHT
@@ -32,13 +31,6 @@ public class PlayerTank {
         this.bullets = new ArrayList<>();
         this.walls = walls;
         loadSprites();
-    }
-
-    public void reset() {
-        this.x = GameMap.TILE_SIZE * 2;
-        this.y = GameMap.TILE_SIZE;
-        this.health = MAX_HEALTH;
-        this.alive = true;
     }
 
     private void loadSprites() {
@@ -200,13 +192,12 @@ public class PlayerTank {
         return health > 0;
     }
 
-    // Новый метод для лечения на 1-2 HP
     public void heal(int amount) {
         if (health < MAX_HEALTH) {
-            int healAmount = random.nextInt(2) + 1; // Лечим на 1 или 2 HP
+            int healAmount = random.nextInt(2) + 1;
             health += healAmount;
             if (health > MAX_HEALTH) {
-                health = MAX_HEALTH; // Не превышаем максимальное здоровье
+                health = MAX_HEALTH;
             }
         }
     }

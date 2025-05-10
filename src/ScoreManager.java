@@ -22,6 +22,6 @@ public class ScoreManager {
     }
 
     public void reset() {
-        score = 0; // Сбрасываем очки
+        score = 0;
     }
 }

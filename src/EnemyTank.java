@@ -102,25 +102,22 @@ public class EnemyTank {
         return Math.sqrt(dx * dx + dy * dy) <= MIN_DISTANCE_FROM_PLAYER;
     }
 
-    // Проверка, есть ли прямой путь к игроку (без препятствий)
     private boolean isPlayerInDirectSight() {
         int dx = playerTank.getX() - x;
         int dy = playerTank.getY() - y;
         double angle = Math.atan2(dy, dx);
 
-        // Расстояние между врагом и игроком
         double distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Проверяем, нет ли препятствий по пути
         for (double i = 0; i < distance; i += 10) {
             int checkX = x + (int) (i * Math.cos(angle));
             int checkY = y + (int) (i * Math.sin(angle));
 
             if (checkCollision(checkX, checkY)) {
-                return false; // Препятствия на пути
+                return false;
             }
         }
-        return true; // Прямой путь к игроку
+        return true;
     }
 
     private boolean checkCollision(int newX, int newY) {

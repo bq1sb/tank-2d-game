@@ -4,13 +4,16 @@ import java.awt.Rectangle;
 public class Item {
     private int x;
     private int y;
-    private int size = 8; // Размер точки-зелья
+    private int size = 8;
     private Color color = Color.RED;
     private boolean collected = false;
+    private ItemEffectCommand effectCommand; // Команда, выполняющая эффект
 
     public Item(int x, int y) {
         this.x = x;
         this.y = y;
+        // По умолчанию предмет лечит на 2 единицы
+        this.effectCommand = new HealCommand(2);
     }
 
     public void draw(Graphics g) {
@@ -33,7 +36,9 @@ public class Item {
     }
 
     public void applyEffect(PlayerTank playerTank) {
-        playerTank.heal(2); // Лечим танк на 1 единицу
+        if (effectCommand != null) {
+            effectCommand.execute(playerTank);
+        }
     }
 
     public int getX() {
@@ -42,5 +47,10 @@ public class Item {
 
     public int getY() {
         return y;
+    }
+
+    // Метод для установки другой команды эффекта (например, для другого типа бонуса)
+    public void setEffectCommand(ItemEffectCommand effectCommand) {
+        this.effectCommand = effectCommand;
     }
 }

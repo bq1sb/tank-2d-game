@@ -12,32 +12,24 @@ public class Game extends JFrame {
     private Image menuBackground;
     private ImageIcon logoIcon;
 
-
-
-
-    // области кнопок для обычного режима
     private final Rectangle normalStartButton = new Rectangle(80, 40, 650, 110);
     private final Rectangle normalSettingsButton = new Rectangle(80, 230, 650, 110);
     private final Rectangle normalExitButton = new Rectangle(80, 420, 650, 110);
 
-    // области кнопок для полноэкранного режима
     private final Rectangle fullscreenStartButton = new Rectangle(150, 50, 1300, 160);
     private final Rectangle fullscreenSettingsButton = new Rectangle(150, 350, 1300, 160);
     private final Rectangle fullscreenExitButton = new Rectangle(150, 630, 1300, 160);
 
-    // области кнопок для меню настроек
     private final Rectangle normalControlsButton = new Rectangle(230, 200, 350, 50);
     private final Rectangle normalSoundButton = new Rectangle(225, 285, 370, 70);
     private final Rectangle normalFullscreenButton = new Rectangle(190, 350, 430, 65);
     private final Rectangle normalBackButton = new Rectangle(290, 430, 200, 70);
 
-    // области кнопок для меню настроек в полноэкранном режиме
     private final Rectangle fullscreenControlsButton = new Rectangle(470, 435, 600, 85);
     private final Rectangle fullscreenSoundButton = new Rectangle(370, 300, 700, 120);
     private final Rectangle fullscreenFullscreenButton = new Rectangle(360, 520, 750, 105);
     private final Rectangle fullscreenBackButton = new Rectangle(550, 650, 420, 90);
 
-    // активные кнопки в текущем режиме
     private Rectangle startGameButtonArea;
     private Rectangle settingsButtonArea;
     private Rectangle exitButtonArea;
@@ -162,7 +154,7 @@ public class Game extends JFrame {
         });
 
         setContentPane(menuPanel);
-        updateButtonAreas(); // обновляем области кнопок
+        updateButtonAreas();
         revalidate();
         repaint();
     }
@@ -176,7 +168,6 @@ public class Game extends JFrame {
             Image background;
 
             {
-                // Загружаем изображение из папки resources
                 background = new ImageIcon(getClass().getResource("/GameMode.png")).getImage();
             }
 
@@ -184,17 +175,15 @@ public class Game extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
-
-                // Устанавливаем цвет для прямоугольников
-                g.setColor(Color.RED); // Можешь изменить на любой другой цвет
+                g.setColor(Color.RED);
 
 
             }
         };
 
-        gameModePanel.setLayout(null); // Ручное позиционирование
+        gameModePanel.setLayout(null);
 
-        // 🔲 Кнопка "Single Player"
+        //  Кнопка "Single Player"
         singlePlayerButton = new JButton();
         singlePlayerButton.setBounds(150, 100, 530, 80);
         singlePlayerButton.setOpaque(false);
@@ -202,8 +191,7 @@ public class Game extends JFrame {
         singlePlayerButton.setBorderPainted(false);
         singlePlayerButton.addActionListener(e -> startSinglePlayerGame());
 
-        // 🔲 Кнопка "Multiplayer"
-        //
+        //  Кнопка "Multiplayer"
         multiplayerButton = new JButton();
         multiplayerButton.setBounds(150, 280, 530, 80);
         multiplayerButton.setOpaque(false);
@@ -211,7 +199,7 @@ public class Game extends JFrame {
         multiplayerButton.setBorderPainted(false);
         multiplayerButton.addActionListener(e -> startMultiplayerGame());
 
-        // 🔲 Кнопка "Back"
+        //  Кнопка "Back"
         backButton = new JButton();
         backButton.setBounds(150, 450, 530, 80);
         backButton.setOpaque(false);
@@ -230,32 +218,17 @@ public class Game extends JFrame {
 
 
     private void startSinglePlayerGame() {
-        // Здесь должно быть что-то вроде:
         GameScreen gameScreen = new GameScreen();
-        setContentPane(gameScreen);  // Меняем содержимое панели на экран игры
+        setContentPane(gameScreen);
         revalidate();
         repaint();
     }
-
-    // В классе Game
-    // В классе Game
-    // В классе Game
     private void startMultiplayerGame() {
         System.out.println("Многопользовательская игра выбрана!");
         NetworkSetupScreen networkSetupScreen = new NetworkSetupScreen(this); // Передаем 'this'
         setContentPane(networkSetupScreen);
         revalidate();
         repaint();
-    }
-
-    private void openNetworkSetupScreen() {
-        // Переход к экрану настроек сети (IP и порт)
-        JFrame networkFrame = new JFrame("Настройки сети");
-        NetworkSetupScreen networkSetupScreen = new NetworkSetupScreen(this);
-        networkFrame.setContentPane(networkSetupScreen);
-        networkFrame.setSize(400, 200);  // Размер окна
-        networkFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        networkFrame.setVisible(true);  // Открываем окно настроек сети
     }
 
 
@@ -271,13 +244,13 @@ public class Game extends JFrame {
                     InputStream inputStream = getClass().getResourceAsStream("/settings.png");
                     if (inputStream != null) {
                         Image settingsImage = ImageIO.read(inputStream);
-                        g.drawImage(settingsImage, 0, 0, getWidth(), getHeight(), this); // растягиваем изображение на весь экран
+                        g.drawImage(settingsImage, 0, 0, getWidth(), getHeight(), this);
                     }
                 } catch (IOException e) {
                     System.out.println("Ошибка при загрузке изображения для настроек: " + e.getMessage());
                 }
 
-                g.setColor(Color.RED); // Красный цвет для границ кнопок (для отладки)
+                g.setColor(Color.RED);
                 if (isFullscreen) {
                     //g.drawRect(fullscreenControlsButton.x, fullscreenControlsButton.y, fullscreenControlsButton.width, fullscreenControlsButton.height);
                     //g.drawRect(fullscreenSoundButton.x, fullscreenSoundButton.y, fullscreenSoundButton.width, fullscreenSoundButton.height);
@@ -416,7 +389,7 @@ public class Game extends JFrame {
         Game.getInstance();
     }
 }
-    //  класс GameScreen будет отображать саму игр
+
 
 
 

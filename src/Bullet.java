@@ -1,8 +1,7 @@
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
-import java.util.List;
+
 
 public class Bullet {
     private static final int WIDTH = 10;
@@ -11,10 +10,9 @@ public class Bullet {
     private final String direction;
     private Image bulletImage;
     private boolean active = true;
-    private boolean destroyed = false;
 
     private static final int SPEED = 7;
-    private static final int SIZE = 10;  // Размер пули
+    private static final int SIZE = 10;
 
     public Bullet(int x, int y, String direction) {
         this.x = x;
@@ -36,7 +34,6 @@ public class Bullet {
         }
     }
 
-    // Обновление позиции пули
     public void update(int fieldWidth, int fieldHeight) {
         if (direction.equals("UP")) y -= SPEED;
         if (direction.equals("DOWN")) y += SPEED;
@@ -48,32 +45,10 @@ public class Bullet {
         }
     }
 
-    // Проверка на столкновения с стенами
-    public boolean checkCollision(List<Wall> walls) {
-        // Проверка столкновений с обычными стенами
-        for (Wall wall : walls) {
-            if (this.getBounds().intersects(wall.getBounds())) {
-                System.out.println("Пуля столкнулась с обычной стеной!");
-                active = false; // Пуля уничтожена при столкновении с обычной стеной
-                return true;
-            }
-        }
-
-        // Проверка столкновений с разрушаемыми стенами
-
-        return false; // Нет столкновения
-    }
-
-
-    // Отрисовка пули
     public void draw(Graphics g) {
         if (bulletImage != null) {
             g.drawImage(bulletImage, x, y, WIDTH, HEIGHT, null);
         }
-    }
-
-    public boolean isOutOfBounds(int screenWidth, int screenHeight) {
-        return x < 0 || x > screenWidth || y < 0 || y > screenHeight;
     }
 
     public Rectangle getBounds() {
@@ -82,17 +57,5 @@ public class Bullet {
 
     public boolean isActive() {
         return active;
-    }
-
-    public void setDestroyed(boolean destroyed) {
-        this.destroyed = destroyed;
-    }
-
-    public boolean isDestroyed() {
-        return destroyed;
-    }
-
-    public void deactivate() {
-        active = false;
     }
 }
