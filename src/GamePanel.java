@@ -11,6 +11,9 @@ public class GamePanel extends JPanel {
 
     public static final int WIDTH = 40 * GameMap.TILE_SIZE; // 1280
     public static final int HEIGHT = 23 * GameMap.TILE_SIZE; // 736
+
+    private RenderStrategy currentRenderStrategy; // Поле для текущей стратегии отрисовки
+
     public GamePanel(PlayerTank player, List<Wall> gameWalls, List<EnemyTank> enemiesList) {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.BLACK);
@@ -19,10 +22,16 @@ public class GamePanel extends JPanel {
         this.playerTank = player;
         this.walls = gameWalls;
         this.enemies = enemiesList;
+
+        // Изначально устанавливаем стратегию для игрового процесса
+        this.currentRenderStrategy = new GamePlayRenderStrategy(playerTank, enemies, walls);
     }
 
     private void gameOver() {
         gameOver = true;
+        // При переходе в состояние Game Over, меняем стратегию отрисовки
+        this.currentRenderStrategy = new GameOverRenderStrategy(this);
+
         int option = JOptionPane.showOptionDialog(
                 this,
                 "Game Over!\nDo you want to play again?",
@@ -44,6 +53,7 @@ public class GamePanel extends JPanel {
             System.exit(0);
         }
     }
+
     public void update() {
         if (gameOver) {
             return;
@@ -61,45 +71,10 @@ public class GamePanel extends JPanel {
         repaint();
     }
 
-    private void showGameOverScreen(Graphics g) {
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, getWidth(), getHeight());
-        g.setColor(Color.RED);
-        g.setFont(new Font("Arial", Font.BOLD, 50));
-        g.drawString("Game Over", getWidth() / 2 - 150, getHeight() / 2);
-    }
-
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (gameOver) {
-            showGameOverScreen(g);
-        } else {
-            if (playerTank != null) {
-                playerTank.draw(g);
-            }
-            for (EnemyTank enemy : enemies) {
-                enemy.draw(g);
-            }
-        }
+        // Теперь отрисовка делегируется текущей стратегии
+        currentRenderStrategy.render(g);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
