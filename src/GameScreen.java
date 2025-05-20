@@ -19,6 +19,7 @@ public class GameScreen extends JPanel {
     private static final int GAME_OVER_IMAGE_WIDTH = 800;
     private static final int GAME_OVER_IMAGE_HEIGHT = 630;
     private List<Item> items = new ArrayList<>();
+    private BulletFactory bulletFactory; // Добавляем поле для BulletFactory
 
     public GameScreen() {
         setFocusable(true);
@@ -33,6 +34,7 @@ public class GameScreen extends JPanel {
             System.err.println("Не удалось создать Robot: " + e.getMessage());
         }
 
+        bulletFactory = new SimpleBulletFactory(); // Инициализируем фабрику здесь
         loadLevel(currentLevel);
 
         int buttonWidth = 120;
@@ -89,8 +91,7 @@ public class GameScreen extends JPanel {
 
         Timer gameTimer = new Timer(50, this::updateGame);
         gameTimer.start();
-        loadLevel(currentLevel);
-        SwingUtilities.invokeLater(this::requestFocusInWindow);
+        requestFocusInWindow();
     }
 
     private void loadGameOverImage() {
@@ -122,8 +123,10 @@ public class GameScreen extends JPanel {
 
     private void loadLevel(int levelNumber) {
         String[] levelData = GameMap.loadLevelData(levelNumber);
-        playerTank = new PlayerTank(GameMap.TILE_SIZE * 2, GameMap.TILE_SIZE, null);
-        gameMap = new GameMap(levelData, playerTank);
+        // Передаем bulletFactory в конструктор PlayerTank
+        playerTank = new PlayerTank(GameMap.TILE_SIZE * 2, GameMap.TILE_SIZE, null, bulletFactory);
+        // Передаем bulletFactory в конструктор GameMap
+        gameMap = new GameMap(levelData, playerTank, bulletFactory);
         playerTank.setWalls(gameMap.walls);
         ScoreManager.getInstance().reset();
         loadBackgroundImage(levelNumber);
@@ -302,11 +305,11 @@ public class GameScreen extends JPanel {
                 loadBackgroundImage(currentLevel);
             }
 
-
             for (int i = 0; i < gameMap.enemies.size(); i++) {
                 EnemyTank enemy = gameMap.enemies.get(i);
                 if (!enemy.isAlive()) {
-                    EnemyTank newEnemy = new EnemyTank(playerTank, gameMap.walls);
+                    // Передаем bulletFactory в конструктор EnemyTank при его перерождении
+                    EnemyTank newEnemy = new EnemyTank(playerTank, gameMap.walls, bulletFactory);
                     if (gameMap.originalEnemyPositions != null && i < gameMap.originalEnemyPositions.size()) {
                         Point spawn = gameMap.originalEnemyPositions.get(i);
                         newEnemy.setPosition(spawn.x, spawn.y);
@@ -322,5 +325,4 @@ public class GameScreen extends JPanel {
             repaint();
         }
     }
-
 }

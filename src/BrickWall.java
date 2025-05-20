@@ -4,7 +4,7 @@ import java.awt.Rectangle;
 
 public class BrickWall extends Wall {
     private int health = 5;
-    private static BrickWallData brickWallData = new BrickWallData(); // Общий легковесный объект
+    private static BrickWallData brickWallData = new BrickWallData();
 
     public BrickWall(int x, int y) {
         super(x, y);

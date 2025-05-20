@@ -8,14 +8,18 @@ public class GameFrame extends JFrame {
     private List<Wall> walls;
     private List<EnemyTank> enemies;
     private GameMap gameMap;
+    private BulletFactory bulletFactory;
 
     public GameFrame() {
         setTitle("Tank Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
 
-        playerTank = new PlayerTank(100, 100, null);
-        gameMap = new GameMap(GameMap.loadLevelData(1), playerTank);
+        bulletFactory = new SimpleBulletFactory();
+
+        // Передаем bulletFactory в конструктор PlayerTank
+        playerTank = new PlayerTank(100, 100, null, bulletFactory); // <-- Вот здесь изменение
+        gameMap = new GameMap(GameMap.loadLevelData(1), playerTank, bulletFactory);
         walls = gameMap.walls;
         enemies = gameMap.enemies;
         playerTank.setWalls(walls);
@@ -34,7 +38,7 @@ public class GameFrame extends JFrame {
             while (true) {
                 gamePanel.update();
                 try {
-                    Thread.sleep(16); // 60 FPS
+                    Thread.sleep(16);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -42,5 +46,3 @@ public class GameFrame extends JFrame {
         }).start();
     }
 }
-
-

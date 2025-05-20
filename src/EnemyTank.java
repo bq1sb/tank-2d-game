@@ -26,9 +26,14 @@ public class EnemyTank {
     private long lastShootTime = 0;
     private Image upSprite, downSprite, leftSprite, rightSprite;
 
-    public EnemyTank(PlayerTank playerTank, List<Wall> walls) {
+    // Добавляем поле для BulletFactory
+    private BulletFactory bulletFactory;
+
+    // Изменяем конструктор, чтобы принимать BulletFactory
+    public EnemyTank(PlayerTank playerTank, List<Wall> walls, BulletFactory bulletFactory) {
         this.playerTank = playerTank;
         this.walls = walls;
+        this.bulletFactory = bulletFactory; // Инициализируем фабрику
         loadSprites();
     }
 
@@ -182,14 +187,31 @@ public class EnemyTank {
         if (Math.random() < 0.4) bullets.add(createBullet());
     }
 
+    // Теперь используем bulletFactory для создания пули
     private Bullet createBullet() {
-        return switch (direction) {
-            case 0 -> new Bullet(x + WIDTH / 2, y, "UP");
-            case 1 -> new Bullet(x + WIDTH / 2, y + HEIGHT, "DOWN");
-            case 2 -> new Bullet(x, y + HEIGHT / 2, "LEFT");
-            case 3 -> new Bullet(x + WIDTH, y + HEIGHT / 2, "RIGHT");
-            default -> null;
-        };
+        int bulletX = x + WIDTH / 2;
+        int bulletY = y + HEIGHT / 2;
+        String bulletDirection = "";
+
+        switch (direction) {
+            case 0 -> { // UP
+                bulletY = y;
+                bulletDirection = "UP";
+            }
+            case 1 -> { // DOWN
+                bulletY = y + HEIGHT;
+                bulletDirection = "DOWN";
+            }
+            case 2 -> { // LEFT
+                bulletX = x;
+                bulletDirection = "LEFT";
+            }
+            case 3 -> { // RIGHT
+                bulletX = x + WIDTH;
+                bulletDirection = "RIGHT";
+            }
+        }
+        return bulletFactory.createBullet(bulletX, bulletY, bulletDirection);
     }
 
 

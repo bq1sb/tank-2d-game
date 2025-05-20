@@ -72,11 +72,11 @@ public class NetworkSetupScreen extends JPanel {
             g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
         }
 
-        g.setColor(Color.RED);
-        g.drawRect(220, 176, 360, 60);
-        g.drawRect(220, 324, 360, 60);
-        g.drawRect(160, 420, 265, 50);
-        g.drawRect(450, 420, 205, 50);
+        //g.setColor(Color.RED);
+        //g.drawRect(220, 176, 360, 60);
+        //g.drawRect(220, 324, 360, 60);
+        //g.drawRect(160, 420, 265, 50);
+        //g.drawRect(450, 420, 205, 50);
     }
 }
 

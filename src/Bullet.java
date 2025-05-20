@@ -1,8 +1,4 @@
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.io.IOException;
-
-
 public class Bullet {
     private static final int WIDTH = 10;
     private static final int HEIGHT = 10;
@@ -10,28 +6,13 @@ public class Bullet {
     private final String direction;
     private Image bulletImage;
     private boolean active = true;
-
     private static final int SPEED = 7;
     private static final int SIZE = 10;
-
-    public Bullet(int x, int y, String direction) {
+    public Bullet(int x, int y, String direction, Image bulletImage) {
         this.x = x;
         this.y = y;
         this.direction = direction;
-        loadImage();
-    }
-
-    private void loadImage() {
-        try {
-            switch (direction) {
-                case "UP" -> bulletImage = ImageIO.read(getClass().getResource("/bullet_up.png"));
-                case "DOWN" -> bulletImage = ImageIO.read(getClass().getResource("/bullet_down.png"));
-                case "LEFT" -> bulletImage = ImageIO.read(getClass().getResource("/bullet_left.png"));
-                case "RIGHT" -> bulletImage = ImageIO.read(getClass().getResource("/bullet_right.png"));
-            }
-        } catch (IOException e) {
-            System.err.println("Не удалось загрузить изображение пули: " + e.getMessage());
-        }
+        this.bulletImage = bulletImage;
     }
 
     public void update(int fieldWidth, int fieldHeight) {

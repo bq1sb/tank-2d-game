@@ -9,8 +9,13 @@ public class GameMap {
     public List<Point> originalEnemyPositions;
     private PlayerTank playerTank;
 
-    public GameMap(String[] data, PlayerTank player) {
+    // Добавляем поле для BulletFactory
+    private BulletFactory bulletFactory;
+
+    // Изменяем конструктор, чтобы принимать BulletFactory
+    public GameMap(String[] data, PlayerTank player, BulletFactory bulletFactory) {
         this.playerTank = player;
+        this.bulletFactory = bulletFactory; // Инициализируем фабрику
         this.walls = new ArrayList<>();
         this.enemies = new ArrayList<>();
         this.originalEnemyPositions = new ArrayList<>();
@@ -24,15 +29,15 @@ public class GameMap {
                     "W............B..........W",
                     "W.....B............B....W",
                     "W..WWWWWWWWWWWWWWWWWWW..W",
-                    "W..W...B.........E...W..W",
+                    "W..W.............E...W..W",
                     "W..W.................W..W",
-                    "W.......B.......B.......W",
-                    "W....E..................W",
-                    "W...B.......P...B.......W",
-                    "W.......................W",
-                    "W..W.........B.......W..W",
-                    "W..W.....B...........W..W",
-                    "W..W..E.......B......W..W",
+                    "W..B.................B..W",
+                    "W..B.E...............B..W",
+                    "W..B........P........B..W",
+                    "W..B.................B..W",
+                    "W..W.................W..W",
+                    "W..W.................W..W",
+                    "W..W..E..............W..W",
                     "W..W.................W..W",
                     "W..WWWWWWWWWWWWWWWWWWW..W",
                     "W.........B........B....W",
@@ -135,7 +140,8 @@ public class GameMap {
                 switch (data[y].charAt(x)) {
                     case 'W' -> walls.add(new Wall(x * TILE_SIZE, y * TILE_SIZE));
                     case 'E' -> {
-                        EnemyTank enemyTank = new EnemyTank(playerTank, walls);
+                        // Теперь передаем bulletFactory в конструктор EnemyTank
+                        EnemyTank enemyTank = new EnemyTank(playerTank, walls, bulletFactory);
                         enemyTank.setPosition(x * TILE_SIZE, y * TILE_SIZE);
                         enemies.add(enemyTank);
                         originalEnemyPositions.add(new Point(x * TILE_SIZE, y * TILE_SIZE));

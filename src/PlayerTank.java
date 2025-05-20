@@ -20,16 +20,20 @@ public class PlayerTank {
 
     private Image upSprite, downSprite, leftSprite, rightSprite;
 
+    private BulletFactory bulletFactory; // Добавляем поле для фабрики пуль
+
     public enum Direction {
         UP, DOWN, LEFT, RIGHT
     }
 
-    public PlayerTank(int x, int y, List<Wall> walls) {
+    // Обновляем конструктор, чтобы принимать BulletFactory
+    public PlayerTank(int x, int y, List<Wall> walls, BulletFactory bulletFactory) {
         this.x = x;
         this.y = y;
         this.direction = Direction.UP;
         this.bullets = new ArrayList<>();
         this.walls = walls;
+        this.bulletFactory = bulletFactory; // Инициализируем фабрику
         loadSprites();
     }
 
@@ -96,9 +100,9 @@ public class PlayerTank {
     }
 
     public void shoot() {
-        bullets.add(new Bullet(x + WIDTH / 2, y + HEIGHT / 2, direction.toString()));
+        // Используем фабрику для создания пули
+        bullets.add(bulletFactory.createBullet(x + WIDTH / 2, y + HEIGHT / 2, direction.toString()));
     }
-
 
     public void update() {
         if (isAlive()) {

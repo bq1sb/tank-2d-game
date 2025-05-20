@@ -225,7 +225,7 @@ public class Game extends JFrame {
     }
     private void startMultiplayerGame() {
         System.out.println("Многопользовательская игра выбрана!");
-        NetworkSetupScreen networkSetupScreen = new NetworkSetupScreen(this); // Передаем 'this'
+        NetworkSetupScreen networkSetupScreen = new NetworkSetupScreen(this);
         setContentPane(networkSetupScreen);
         revalidate();
         repaint();
